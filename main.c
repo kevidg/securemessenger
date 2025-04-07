@@ -9,19 +9,23 @@
 #include <arpa/inet.h>
 
 /* !!!!!!!!!!!!!!!!!!!!!!!!! */
-/* !!!! DEFINE stuff here !!!!! 
+/*    DEFINE stuff here  
 Maybe move to a header file??
 /*****************************/
-#define server_port 31337
-#define client_port 31339
+#define SERVER_PORT 31337
+#define BUFFER_SIZE 1024
+
 
 /* ~~~~~ Function Prototypes ~~~~~~
 /////////////////////////////////////*/
 int validate_ip(const char *in_addr);
+void run_server();
+void run_client();
 
 
 /* ~~~~~~ Globals ~~~~~*/
-int IP_ADDRESS;
+char *IP_ADDRESS = "127.0.0.1";
+static char default_msg[] = "Establishing Connection ...";
 
 
 /*****************/
@@ -58,23 +62,68 @@ int main(int argc, char *argv[]){
         fprintf(stderr, "!! Error: Invalid IP address");
     }
 
+    
+
+} // ---- End Main ----
+
+/******************/
+/* run_server code*/
+/******************/
+void run_server(){
     /************************/
     /* Server Listener code */
 
-    int server_socket;
+    int server_socket, client_socket;
+    struct sockaddr_in server_address, client_address;
+    char buffer[BUFFER_SIZE];
+
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if(server_socket < 0){
+        perror("Socket creation failed");
+        exit(EXIT_FAILURE);
+    }
 
-    struct sockaddr_in server_address;
-    server_address.sin_family = AF_INET;
+    
+    server_address.sin_family = AF_INET; 
+    server_address.sin_port = htons(SERVER_PORT);
     server_address.sin_addr.s_addr = INADDR_ANY;
-    server_address.sin_port = htons(server_port);
 
-    if(bind( server_socket, (struct sockaddr *)&server_address, sizeof(server_address)) == -1){
+    if(bind( server_socket, (struct sockaddr *)&server_address, sizeof(server_address)) < 0){
         perror("bind failed");
         exit(EXIT_FAILURE);
     }
 
-} // ---- End Main ----
+    //Listen
+    if(listen(server_socket, 1) < 0){
+        perror("Listen failed");
+        close(server_socket);
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Listening on port ---> %d\n", SERVER_PORT);
+    socklen_t clientLen = sizeof(client_address);
+    client_socket = accept(server_socket, (struct sockaddr *)&client_address ,&clientLen);
+    if(client_socket < 0){
+        perror("Client Accept Failed");
+        close(server_socket);
+        exit(EXIT_FAILURE);
+    } 
+
+    printf(":: Connection established - %s\n", inet_ntoa(client_address.sin_addr));
+
+
+    printf("!! Testing clear text\nSending ---> '%s'\n", default_msg);
+    int bytes_read = read(client_socket, buffer, BUFFER_SIZE);
+    buffer[bytes_read] = '\0';
+    printf("[%S]: %s\n", IP_ADDRESS, buffer);
+
+    char msg[] = "What's the BLUF?";
+    send(client_socket, msg, strlen(msg), 0);
+
+    close(client_socket);
+    close(server_socket);
+
+}
 
 /***************** */
 /*Input Validation*/
