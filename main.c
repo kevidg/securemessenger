@@ -25,7 +25,7 @@ void run_client();
 
 /* ~~~~~~ Globals ~~~~~*/
 char *IP_ADDRESS = "127.0.0.1";
-static char default_msg[] = "Establishing Connection ...";
+//static char default_msg[] = "Establishing Connection ...";
 
 
 /*****************/
@@ -35,10 +35,13 @@ int main(int argc, char *argv[]){
     // Arg Parser
     int opt;
     char *user_in_addr = NULL;
-    while((opt = getopt(argc, argv, "i:")) != -1){
+    while((opt = getopt(argc, argv, "is:")) != -1){
         switch (opt){
             case 'i':
-                user_in_addr = optarg;
+                run_client();
+                break;
+            case 's':
+                run_server();
                 break;
             case '?':
             default:
@@ -57,6 +60,7 @@ int main(int argc, char *argv[]){
 
     if (validate_ip(user_in_addr)){
         printf("## Connecting to IP Address: %s\n", user_in_addr);
+        run_client();
     }
     else{
         fprintf(stderr, "!! Error: Invalid IP address");
@@ -69,20 +73,20 @@ int main(int argc, char *argv[]){
 /* ---- End Main ----*/
 /********************************************************************/
 
-/******************/
-/* run_server code*/
-/******************/
+/************************/
+/* Begin run_server code*/
+/************************/
 void run_server(){
     /************************/
     /* Server Listener code */
 
     int server_socket, client_socket;
     struct sockaddr_in server_address, client_address;
-    char buffer[BUFFER_SIZE];
+    
 
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if(server_socket < 0){
-        perror("Socket creation failed");
+        perror("!! Socket creation failed");
         exit(EXIT_FAILURE);
     }
 
@@ -92,13 +96,13 @@ void run_server(){
     server_address.sin_addr.s_addr = INADDR_ANY;
 
     if(bind( server_socket, (struct sockaddr *)&server_address, sizeof(server_address)) < 0){
-        perror("bind failed");
+        perror("!! bind failed");
         exit(EXIT_FAILURE);
     }
 
     //Listen
     if(listen(server_socket, 1) < 0){
-        perror("Listen failed");
+        perror("!! Listener failure");
         close(server_socket);
         exit(EXIT_FAILURE);
     }
@@ -114,13 +118,14 @@ void run_server(){
 
     printf(":: Connection established - %s\n", inet_ntoa(client_address.sin_addr));
 
-
-    printf("!! Testing clear text\nSending ---> '%s'\n", default_msg);
+    char buffer[BUFFER_SIZE];
+    char msg[] = "What's the BLUF?";
+    printf("!! Testing clear text\nSending ---> '%s'\n", msg);
     int bytes_read = read(client_socket, buffer, BUFFER_SIZE);
     buffer[bytes_read] = '\0';
-    printf("[%S]: %s\n", IP_ADDRESS, buffer);
+    printf("[%s]: %s\n", IP_ADDRESS, buffer);
 
-    char msg[] = "What's the BLUF?";
+    
     send(client_socket, msg, strlen(msg), 0);
 
     close(client_socket);
@@ -129,6 +134,40 @@ void run_server(){
 }
 /* End run_server() */
 /*****************************************************************/
+
+/********************/
+/* Begin run_client()*/
+/********************/
+void run_client(){
+    int cl_sock;
+    struct sockaddr_in server_address;
+    char buffer[BUFFER_SIZE] = "It's all chicken feed.";
+
+    //create socket
+    if((cl_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0){
+        perror("!! Socket Failure");
+        exit(EXIT_FAILURE);
+    }
+    // Try to connect to server
+    server_address.sin_family = AF_INET;
+    server_address.sin_port = htons(SERVER_PORT);
+    inet_pton(AF_INET, IP_ADDRESS, &server_address.sin_addr);
+
+    if(connect(cl_sock, (struct sockaddr *)&server_address, sizeof(server_address)) < 0){
+        perror("!! Connection failure");
+        close(cl_sock);
+        exit(EXIT_FAILURE);
+    }
+    send(cl_sock, buffer, strlen(buffer), 0);
+    printf("## Message to server ---> %s\n", buffer);
+
+    int bytes_read = read(cl_sock, buffer, BUFFER_SIZE);
+    buffer[bytes_read] = '\0';
+    printf("[%s]: %s\n", IP_ADDRESS, buffer);
+    close(cl_sock);
+}
+/* End run_client()*/
+/*************************/
 
 /***************** */
 /*Input Validation*/
@@ -163,4 +202,6 @@ int validate_ip(const char *in_addr){
     free(cp_in_addr);
 
     return (segments == 4);
-} // End validate_ip()
+} 
+/* End validate_ip() ***/
+/***************************************** */
