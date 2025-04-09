@@ -156,7 +156,7 @@ void comms_loop(int ne_socket){
         }
         send(ne_socket, buffer, strlen(buffer), 0);
     }
-    
+    pthread_join(receiver_thread, NULL);
     
 }
 /***** End comms_loop() ******/
