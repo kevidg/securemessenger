@@ -132,9 +132,9 @@ void run_server(){
     buffer[bytes_read] = '\0';
     printf("[%s]: %s\n", IP_ADDRESS, buffer);
 
-    send(client_socket, msg, strlen(msg), 0);
+    printf(":: Connected to [%s] :: Type message || Type 'quit()' to exit.\n", IP_ADDRESS);
+    comms_loop(client_socket);
 
-    close(client_socket);
     close(server_socket);
 
 }
@@ -164,12 +164,11 @@ void run_client(){
         close(cl_sock);
         exit(EXIT_FAILURE);
     }
+
     send(cl_sock, buffer, strlen(buffer), 0);
     printf("## Message to server ---> %s\n", buffer);
-
-    int bytes_read = read(cl_sock, buffer, BUFFER_SIZE);
-    buffer[bytes_read] = '\0';
-    printf("[%s]: %s\n", IP_ADDRESS, buffer);
+    printf(":: Connected to [%s] :: Type message || Type 'quit()' to exit.\n");
+    comms_loop(cl_sock);
     close(cl_sock);
 }
 /* End run_client()*/
