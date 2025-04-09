@@ -99,11 +99,13 @@ void run_server(){
         exit(EXIT_FAILURE);
     } 
 
-    printf(":: Connected to [name] :: Type message || Type 'quit()' to exit.\n");
+    printf(":: Connected to [name]\n:: Type message || Type 'quit()' to exit.\n");
     
     comms_loop(client_socket);
 
     close(server_socket);
+     
+    return;
 
 }
 /* End run_server() */
@@ -138,6 +140,7 @@ void run_client(){
     printf(":: Connected to [name] :: Type message || Type 'quit()' to exit.\n");
     comms_loop(cl_sock);
     close(cl_sock);
+    return;
 }
 /* End run_client()*/
 /***************************************************************/
@@ -155,10 +158,13 @@ void comms_loop(int ne_socket){
     while(1){
         memset(buffer, 0, BUFFER_SIZE); // clear buffer
         fgets(buffer, BUFFER_SIZE, stdin); //Get input form user
+        buffer[strcspn(buffer, "\n")] = '\0'; // strip the '/n' from the end
+
         if(strcmp(buffer, "quit()") == 0){
             unsigned char ciphertxt[BUFFER_SIZE];
             int ciphertext_len = aes_encrypt((unsigned char*)buffer, strlen(buffer), ciphertxt);
             send(ne_socket, ciphertxt, ciphertext_len, 0);
+            shutdown(ne_socket, SHUT_RDWR);
             break;
         }
         unsigned char ciphertxt[BUFFER_SIZE];
@@ -185,20 +191,23 @@ void *msg_receiver(void *arg){
         memset(buffer, 0, BUFFER_SIZE); // Clears the buffer
         int bytes_received = recv(sock, buffer, BUFFER_SIZE, 0); // reads the size of the incoming message
         if(bytes_received <= 0){ // if no bytes come in the connection is closed
-            printf("!! Connection Lost / Ended\n");
+            printf("!! Connection Lost\n");
             break;
         }
+
         unsigned char plaintext[BUFFER_SIZE];
         int plaintext_len = aes_decrypt((unsigned char*)buffer, bytes_received, plaintext);
         plaintext[plaintext_len] = '\0'; // Null-terminate
-
+        // debug
+       // printf("[DEBUG] Received plaintext: '%s'\n", plaintext);
+        // End debug
         if(strcmp((char*)plaintext, "quit()") == 0){
             printf(":: Chat ended.\n");
             break;
         }
         printf("[Name]: %s\n", plaintext);
     }
-    return NULL;
+    pthread_exit(NULL);
 }
 /* End msg_receiver() */
 /****************************************************************/
