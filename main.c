@@ -176,7 +176,7 @@ void run_client(){
 /********************/
 void comms_loop(int ne_socket){
     char buffer[BUFFER_SIZE];
-    
+
     //Create new thread for receiving messages
     pthread_t receiver_thread;
     pthread_create(&receiver_thread, NULL, msg_receiver, &ne_socket );
@@ -184,6 +184,9 @@ void comms_loop(int ne_socket){
     while(1){
         memset(buffer, 0, BUFFER_SIZE); // clear buffer
         fgets(buffer, BUFFER_SIZE, stdin); //Get input form user
+        if(strncmp(buffer, "quit()", 6) == 0){
+            break;
+        }
         send(ne_socket, buffer, strlen(buffer), 0);
     }
     
