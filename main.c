@@ -166,7 +166,7 @@ void comms_loop(int ne_socket){
 /************************ */
 //When a connection is made a thread is created to receive the incoming messages, 
 //this function is called by the new thread. 
-//
+
 void *msg_receiver(void *arg){
     int sock = *(int *)arg; //the incoming socket from the function argument
     char buffer[BUFFER_SIZE];
