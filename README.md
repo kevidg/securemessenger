@@ -27,6 +27,7 @@ A terminal-based secure messaging application built with C, featuring **AES encr
 - POSIX-compliant OS (Linux/macOS)
 - Networking via sockets
 - Standard C libraries
+- OpenSSL
 
 ## 🧪 Build Instructions
 
