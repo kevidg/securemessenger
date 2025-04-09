@@ -29,7 +29,6 @@ void comms_loop(int sock_fd); // The function accepts a socket file descriptor a
 /* ~~~~~~ Globals ~~~~~*/
 char *IP_ADDRESS = "127.0.0.1";
 //static char default_msg[] = "Establishing Connection ...";
-//static char default_msg[] = "Establishing Connection ...";
 
 
 /*****************/
@@ -65,7 +64,6 @@ int main(int argc, char *argv[]){
     if (validate_ip(user_in_addr)){
         printf("## Connecting to IP Address: %s\n", user_in_addr);
         run_client();
-        run_client();
     }
     else{
         fprintf(stderr, "!! Error: Invalid IP address");
@@ -78,9 +76,8 @@ int main(int argc, char *argv[]){
 /* ---- End Main ----*/
 /********************************************************************/
 
-/************************/
-/* Begin run_server code*/
-/************************/
+
+
 /************************/
 /* Begin run_server code*/
 /************************/
@@ -96,7 +93,6 @@ void run_server(){
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if(server_socket < 0){
         perror("!! Socket creation failed");
-        perror("!! Socket creation failed");
         exit(EXIT_FAILURE);
     }
 
@@ -107,13 +103,11 @@ void run_server(){
 
     if(bind( server_socket, (struct sockaddr *)&server_address, sizeof(server_address)) < 0){
         perror("!! bind failed");
-        perror("!! bind failed");
         exit(EXIT_FAILURE);
     }
 
     //Listen
     if(listen(server_socket, 1) < 0){
-        perror("!! Listener failure");
         perror("!! Listener failure");
         close(server_socket);
         exit(EXIT_FAILURE);
@@ -133,17 +127,11 @@ void run_server(){
     char buffer[BUFFER_SIZE];
     char msg[] = "What's the BLUF?";
     printf("!! Testing clear text\nSending ---> '%s'\n", msg);
-    char buffer[BUFFER_SIZE];
-    char msg[] = "What's the BLUF?";
-    printf("!! Testing clear text\nSending ---> '%s'\n", msg);
+    
     int bytes_read = read(client_socket, buffer, BUFFER_SIZE);
     buffer[bytes_read] = '\0';
     printf("[%s]: %s\n", IP_ADDRESS, buffer);
 
-    
-    printf("[%s]: %s\n", IP_ADDRESS, buffer);
-
-    
     send(client_socket, msg, strlen(msg), 0);
 
     close(client_socket);
@@ -240,9 +228,6 @@ int validate_ip(const char *in_addr){
     free(cp_in_addr);
 
     return (segments == 4);
-} 
-/* End validate_ip() ***/
-/***************************************** */
 } 
 /* End validate_ip() ***/
 /***************************************** */
