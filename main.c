@@ -155,7 +155,10 @@ void comms_loop(int ne_socket){
     while(1){
         memset(buffer, 0, BUFFER_SIZE); // clear buffer
         fgets(buffer, BUFFER_SIZE, stdin); //Get input form user
-        if(strncmp(buffer, "quit()", 6) == 0){
+        if(strcmp(buffer, "quit()") == 0){
+            unsigned char ciphertxt[BUFFER_SIZE];
+            int ciphertext_len = aes_encrypt((unsigned char*)buffer, strlen(buffer), ciphertxt);
+            send(ne_socket, ciphertxt, ciphertext_len, 0);
             break;
         }
         unsigned char ciphertxt[BUFFER_SIZE];
@@ -188,6 +191,11 @@ void *msg_receiver(void *arg){
         unsigned char plaintext[BUFFER_SIZE];
         int plaintext_len = aes_decrypt((unsigned char*)buffer, bytes_received, plaintext);
         plaintext[plaintext_len] = '\0'; // Null-terminate
+
+        if(strcmp((char*)plaintext, "quit()") == 0){
+            printf(":: Chat ended.\n");
+            break;
+        }
         printf("[Name]: %s\n", plaintext);
     }
     return NULL;
@@ -259,7 +267,7 @@ int aes_decrypt(const unsigned char *ciphertxt, int ciphertxt_len, unsigned char
         perror("Error decrypting message");
     }
     plaintxt_len = len;
-    
+
     // Finalize encryption
     if(EVP_DecryptFinal_ex(ctx, plaintxt + len, &len) != 1){
         perror("Error Finalizing decryption");
