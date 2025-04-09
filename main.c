@@ -20,11 +20,13 @@ Maybe move to a header file??
 
 /* ~~~~~ Function Prototypes ~~~~~~
 /////////////////////////////////////*/
+// User Input Functions
 int validate_ip(const char *in_addr);
+// Network Functions
 void run_server(); // The server side of network connnection, waits for client to connect
 void run_client(); // The client side of the network connection
 void comms_loop(int sock_fd); // The function accepts a socket file descriptor and maintains a communication loop
-
+void *msg_receiver(void *arg); // A function called by the thread for receiving a message
 
 /* ~~~~~~ Globals ~~~~~*/
 char *IP_ADDRESS = "127.0.0.1";
@@ -219,6 +221,31 @@ void comms_loop(int ne_socket){
         }
     }
 }
+/***** End comms_loop() ******/
+
+/***************************/
+/*  Begin msg_receiver()  */
+/************************ */
+//When a connection is made a thread is created to receive the incoming messages, 
+//this function is called by the new thread. 
+//
+void *msg_receiver(void *arg){
+    int sock = *(int *)arg; //the incoming socket from the function argument
+    char buffer[BUFFER_SIZE];
+
+    while(1){
+        memset(buffer, 0, BUFFER_SIZE); // Clears the buffer
+        int bytes_received = recv(sock, buffer, BUFFER_SIZE, 0); // reads the size of the incoming message
+        if(bytes_received <= 0){ // if no bytes come in the connection is closed
+            printf("!! Connection Lost / Ended\n");
+            break;
+        }
+        printf("[Name]: %s\n", buffer);
+    }
+    return NULL;
+}
+
+/******  End msg_receiver() ******/
 
 /***************** */
 /*Input Validation*/
