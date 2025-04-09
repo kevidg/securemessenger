@@ -191,7 +191,33 @@ void comms_loop(int ne_socket){
 
     while(1){
         FD_ZERO(&readfds);
-        FD_SET()
+        FD_SET(ne_socket, &readfds); // monitors network
+        FD_SET(STDIN_FILENO, &readfds); // monitors keyboard, stdin
+
+        if (select(max_fd + 1, &readfds, NULL, NULL, NULL) < 0){
+            perror("select error");
+            break;
+        }
+
+        //Check for user input
+        if(FD_ISSET(STDIN_FILENO, &readfds)){
+            fgets(buffer, sizeof(buffer), stdin);
+            if(strncmp(buffer, "quit()", 6) == 0){
+                break;
+            }
+            send(ne_socket, buffer, strlen(buffer), 0);
+        }
+
+        //Check for network data
+        if(FD_ISSET(ne_socket, &readfds)){
+            int bytes_read = recv(ne_socket, buffer, sizeof(buffer)-1, 0);
+            if(bytes_read <= 0){
+                printf("!! Closed Connection\n");
+                break;
+            }
+            buffer[bytes_read] = '\0';
+            printf("[%s]: %s", IP_ADDRESS, buffer);
+        }
     }
 }
 
