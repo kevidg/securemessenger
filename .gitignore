@@ -1,20 +1,61 @@
-# Ignore object files and compiled code
+# Compiled object files
 *.o
-*.out
-*.class
-*.exe
-*.x
 
-# Ignore editor/OS files
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic Libraries
+*.so
+*.dylib
+*.dll
+
+# Executable binaries
+*.exe
+*.out
+*.app
+
+# Debug files
+*.dSYM/
+*.stackdump
+core
+vgcore.*
+
+# Build directories
+/build/
+/bin/
+/obj/
+/dist/
+
+# Editor and OS files
+*.log
+*.swp
+*.swo
+*~
 .DS_Store
 Thumbs.db
 
-# Ignore all files in folders
-build/
-temp/
-logs/
+# Visual Studio Code
+.vscode/
 
-# Ignore personal config files
-*.log
+# CMake and Make
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Autotools
+/aclocal.m4
+/autom4te.cache/
+/config.h
+/config.log
+/config.status
+/configure
+/depcomp
+/install-sh
+/ltmain.sh
+/missing
+
+# User-specific files
 *.env
-*.swp
+
