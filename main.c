@@ -7,6 +7,10 @@ int main(int argc, char *argv[]){
     // Arg Parser
     int opt;
     char *user_in_addr = NULL;
+
+    OpenSSL_add_all_algorithms();
+    //generate_aes_key_iv();
+
     while((opt = getopt(argc, argv, "cs")) != -1){
         switch (opt){
             case 'c':
@@ -48,7 +52,7 @@ int main(int argc, char *argv[]){
 
 
 /************************/
-/* Begin run_server code*/
+/* Begin run_server() */
 /************************/
 void run_server(){
     /************************/
@@ -136,7 +140,7 @@ void run_client(){
     close(cl_sock);
 }
 /* End run_client()*/
-/*************************/
+/***************************************************************/
 
 /********************/
 /* Begin comms_loop()*/
@@ -154,12 +158,15 @@ void comms_loop(int ne_socket){
         if(strncmp(buffer, "quit()", 6) == 0){
             break;
         }
-        send(ne_socket, buffer, strlen(buffer), 0);
+        unsigned char ciphertxt[BUFFER_SIZE];
+        int ciphertext_len = aes_encrypt((unsigned char*)buffer, strlen(buffer), ciphertxt);
+        send(ne_socket, ciphertxt, ciphertext_len, 0);
     }
     pthread_join(receiver_thread, NULL);
     
 }
-/***** End comms_loop() ******/
+/* End comms_loop() */
+/***************************************************************/
 
 /***************************/
 /*  Begin msg_receiver()  */
@@ -178,12 +185,93 @@ void *msg_receiver(void *arg){
             printf("!! Connection Lost / Ended\n");
             break;
         }
-        printf("[Name]: %s\n", buffer);
+        unsigned char plaintext[BUFFER_SIZE];
+        int plaintext_len = aes_decrypt((unsigned char*)buffer, bytes_received, plaintext);
+        plaintext[plaintext_len] = '\0'; // Null-terminate
+        printf("[Name]: %s\n", plaintext);
     }
     return NULL;
 }
+/* End msg_receiver() */
+/****************************************************************/
 
-/******  End msg_receiver() ******/
+/********************/
+/* Begin generate_aes_key_iv() */
+/*********************/
+void generate_aes_key_iv(){
+    RAND_bytes(aes_key, sizeof(aes_key));
+    RAND_bytes(aes_iv, sizeof(aes_iv));
+}
+/* End generate_aes_key_iv() */
+/*****************************************************************/
+
+/**********************/
+/* Begin aes_encrypt()*/
+/**********************/
+int aes_encrypt(const unsigned char *plaintxt, int plaintxt_len, unsigned char *ciphertxt){
+    EVP_CIPHER_CTX *ctx;
+    int len, ciphertxt_len;
+
+    // intialize the cipher context
+    if(!(ctx = EVP_CIPHER_CTX_new())){
+        perror("CTX not initialized");
+    }
+    // initialize the encryptiong operation
+    if(EVP_EncryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, aes_key, aes_iv) != 1){
+        perror("Encrypt Op not Initialized");
+    }
+    // Provide message to be encrypted
+    if(EVP_EncryptUpdate(ctx, ciphertxt, &len, plaintxt, plaintxt_len) != 1){
+        perror("Error encrypting message");
+    }
+    ciphertxt_len = len;
+    // Finalize encryption
+    if(EVP_EncryptFinal_ex(ctx, ciphertxt + len, &len) != 1){
+        perror("Error Finalizing encryption");
+    }
+    ciphertxt_len += len;
+
+    // Clean up
+    EVP_CIPHER_CTX_free(ctx);
+    return ciphertxt_len;
+
+}
+/* End aes_encrypt()*/
+/*****************************************************************************/
+
+/**********************/
+/* Begin aes_decrypt()*/
+/**********************/
+int aes_decrypt(const unsigned char *ciphertxt, int ciphertxt_len, unsigned char *plaintxt){
+    EVP_CIPHER_CTX *ctx;
+    int len, plaintxt_len;
+
+    // intialize the cipher context
+    if(!(ctx = EVP_CIPHER_CTX_new())){
+        perror("CTX not initialized");
+    }
+    // initialize the decryption operation
+    if(EVP_DecryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, aes_key, aes_iv) != 1){
+        perror("Decrypt Op not Initialized");
+    }
+    // Provide message to be decrypted
+    if(EVP_DecryptUpdate(ctx, plaintxt, &len, ciphertxt, ciphertxt_len) != 1){
+        perror("Error decrypting message");
+    }
+    ciphertxt_len = len;
+    // Finalize encryption
+    if(EVP_DecryptFinal_ex(ctx, plaintxt + len, &len) != 1){
+        perror("Error Finalizing decryption");
+    }
+    plaintxt_len += len;
+
+    // Clean up
+    EVP_CIPHER_CTX_free(ctx);
+    return plaintxt_len;
+
+}
+/* End aes_decrypt()*/
+/*****************************************************************************/
 
 /***************** */
 /*Input Validation*/
@@ -220,4 +308,4 @@ int validate_ip(const char *in_addr){
     return (segments == 4);
 } 
 /* End validate_ip() ***/
-/***************************************** */
+/***************************************************************/
