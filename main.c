@@ -91,6 +91,7 @@ void run_server(){
     struct sockaddr_in server_address, client_address;
     
     
+    
 
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if(server_socket < 0){
@@ -114,9 +115,12 @@ void run_server(){
         close(server_socket);
         exit(EXIT_FAILURE);
     }
-
     printf("Listening on port ---> %d\n", SERVER_PORT);
+
     socklen_t clientLen = sizeof(client_address);
+    /*The socklen_t type is used in socket programming to represent the size of a socket address structure. 
+    It is typically used in functions that deal with socket addresses, such as accept(), getsockname(), and
+    getpeername().*/
     client_socket = accept(server_socket, (struct sockaddr *)&client_address ,&clientLen);
     if(client_socket < 0){
         perror("Client Accept Failed");
@@ -124,17 +128,8 @@ void run_server(){
         exit(EXIT_FAILURE);
     } 
 
-    printf(":: Connection established - %s\n", inet_ntoa(client_address.sin_addr));
-
-    char buffer[BUFFER_SIZE];
-    char msg[] = "What's the BLUF?";
-    printf("!! Testing clear text\nSending ---> '%s'\n", msg);
+    printf(":: Connected to [name] :: Type message || Type 'quit()' to exit.\n");
     
-    int bytes_read = read(client_socket, buffer, BUFFER_SIZE);
-    buffer[bytes_read] = '\0';
-    printf("[%s]: %s\n", IP_ADDRESS, buffer);
-
-    printf(":: Connected to [%s] :: Type message || Type 'quit()' to exit.\n", IP_ADDRESS);
     comms_loop(client_socket);
 
     close(server_socket);
@@ -149,7 +144,7 @@ void run_server(){
 void run_client(){
     int cl_sock;
     struct sockaddr_in server_address;
-    char buffer[BUFFER_SIZE] = "It's all chicken feed.";
+    //char buffer[BUFFER_SIZE];
 
     
     if((cl_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0){
@@ -159,6 +154,8 @@ void run_client(){
     
     server_address.sin_family = AF_INET;
     server_address.sin_port = htons(SERVER_PORT);
+    // The following function takes a string(IP_ADDRESS) and converts to an IPv4 binary and stores it 
+    // in the sockaddr_in struct (server_address)
     inet_pton(AF_INET, IP_ADDRESS, &server_address.sin_addr);
 
     if(connect(cl_sock, (struct sockaddr *)&server_address, sizeof(server_address)) < 0){
@@ -167,9 +164,7 @@ void run_client(){
         exit(EXIT_FAILURE);
     }
 
-    send(cl_sock, buffer, strlen(buffer), 0);
-    printf("## Message to server ---> %s\n", buffer);
-    printf(":: Connected to [%s] :: Type message || Type 'quit()' to exit.\n");
+    printf(":: Connected to [name] :: Type message || Type 'quit()' to exit.\n");
     comms_loop(cl_sock);
     close(cl_sock);
 }
@@ -181,45 +176,17 @@ void run_client(){
 /********************/
 void comms_loop(int ne_socket){
     char buffer[BUFFER_SIZE];
-    fd_set readfds; 
-    int max_fd;
-
-    if(ne_socket > STDIN_FILENO){
-        max_fd = ne_socket;
-    }else{
-        max_fd = STDIN_FILENO;
-    }
+    //Create new thread for receiving messages
+    pthread_t receiver_thread;
+    pthread_create(&receiver_thread, NULL, msg_receiver, &ne_socket );
 
     while(1){
-        FD_ZERO(&readfds);
-        FD_SET(ne_socket, &readfds); // monitors network
-        FD_SET(STDIN_FILENO, &readfds); // monitors keyboard, stdin
-
-        if (select(max_fd + 1, &readfds, NULL, NULL, NULL) < 0){
-            perror("select error");
-            break;
-        }
-
-        //Check for user input
-        if(FD_ISSET(STDIN_FILENO, &readfds)){
-            fgets(buffer, sizeof(buffer), stdin);
-            if(strncmp(buffer, "quit()", 6) == 0){
-                break;
-            }
-            send(ne_socket, buffer, strlen(buffer), 0);
-        }
-
-        //Check for network data
-        if(FD_ISSET(ne_socket, &readfds)){
-            int bytes_read = recv(ne_socket, buffer, sizeof(buffer)-1, 0);
-            if(bytes_read <= 0){
-                printf("!! Closed Connection\n");
-                break;
-            }
-            buffer[bytes_read] = '\0';
-            printf("[%s]: %s", IP_ADDRESS, buffer);
-        }
+        memset(buffer, 0, BUFFER_SIZE); // clear buffer
+        fgets(buffer, BUFFER_SIZE, stdin); //Get input form user
+        send(ne_socket, buffer, strlen(buffer), 0);
     }
+    
+    
 }
 /***** End comms_loop() ******/
 
