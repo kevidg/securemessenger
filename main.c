@@ -258,7 +258,8 @@ int aes_decrypt(const unsigned char *ciphertxt, int ciphertxt_len, unsigned char
     if(EVP_DecryptUpdate(ctx, plaintxt, &len, ciphertxt, ciphertxt_len) != 1){
         perror("Error decrypting message");
     }
-    ciphertxt_len = len;
+    plaintxt_len = len;
+    
     // Finalize encryption
     if(EVP_DecryptFinal_ex(ctx, plaintxt + len, &len) != 1){
         perror("Error Finalizing decryption");
