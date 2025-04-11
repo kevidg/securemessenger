@@ -160,7 +160,7 @@ void comms_loop(int ne_socket){
     }
 
     printf(":: Connected to [name] :: \n");
-    printf(":: Type message || Type 'quit()' to exit ::\n");
+    printf(":: Type message || Type '/quit' to exit ::\n");
 
     while(chat_running){
         FD_ZERO(&readfds);
@@ -175,20 +175,26 @@ void comms_loop(int ne_socket){
         //Check for user input
         if(FD_ISSET(STDIN_FILENO, &readfds)){
             memset(buffer, 0, BUFFER_SIZE); // Clears the buffer
-            printf(">>");
             if(fgets(buffer, sizeof(buffer), stdin) == NULL){
                 printf("!! Input Stream Closed");
                 break;
             }
 
             // strip the '/n' from the end
-            buffer[strcspn(buffer, "\n")] = '\0'; 
+            buffer[strcspn(buffer, "\n")] = '\0';
+
+            // Check for a clear screen cmd
+            if(strcasecmp(buffer, "/clear") == 0){
+                printf("\033[2J\033[H"); // ANSI escape codes to clear the screen 
+                fflush(stdout);
+                continue;
+            } 
             
             // Encrypt and Send
             int ciphertext_len = aes_encrypt((unsigned char*)buffer, strlen(buffer), ciphertxt);
             send(ne_socket, ciphertxt, ciphertext_len, 0);
 
-            if(strcmp(buffer, "quit()") == 0){
+            if(strcasecmp(buffer, "/quit") == 0){
                 shutdown(ne_socket, SHUT_RDWR);
                 break;
             }
@@ -208,7 +214,7 @@ void comms_loop(int ne_socket){
             plaintext[plaintext_len] = '\0'; // Null-terminate
 
             // Check if the quit() cmd was sent
-            if(strcmp((char*)plaintext, "quit()") == 0){
+            if(strcasecmp((char*)plaintext, "/quit") == 0){
                     printf(":: Chat ended by [name].\n");
                     break;
             }
