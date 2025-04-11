@@ -58,15 +58,13 @@ void run_server(){
     /************************/
     /* Server Listener code */
 
-    int server_socket, client_socket;
+    int server_socket, client_socket, opt;
     struct sockaddr_in server_address, client_address;
-    
-    
-    
 
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    
     if(server_socket < 0){
-        perror("!! Socket creation failed");
+        perror("!! Socket Creation Failed");
         exit(EXIT_FAILURE);
     }
 
@@ -74,15 +72,16 @@ void run_server(){
     server_address.sin_family = AF_INET; 
     server_address.sin_port = htons(SERVER_PORT);
     server_address.sin_addr.s_addr = INADDR_ANY;
+    setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)); //reuse address after exiting
 
     if(bind( server_socket, (struct sockaddr *)&server_address, sizeof(server_address)) < 0){
-        perror("!! bind failed");
+        perror("!! Bind Failed");
         exit(EXIT_FAILURE);
     }
 
     //Listen
     if(listen(server_socket, 1) < 0){
-        perror("!! Listener failure");
+        perror("!! Listener Failure");
         close(server_socket);
         exit(EXIT_FAILURE);
     }
@@ -94,12 +93,12 @@ void run_server(){
     getpeername().*/
     client_socket = accept(server_socket, (struct sockaddr *)&client_address ,&clientLen);
     if(client_socket < 0){
-        perror("Client Accept Failed");
+        perror("!! Client Accept Failed");
         close(server_socket);
         exit(EXIT_FAILURE);
     } 
 
-    printf(":: Connected to [name]\n:: Type message || Type 'quit()' to exit.\n");
+    
     
     comms_loop(client_socket);
 
@@ -117,7 +116,7 @@ void run_server(){
 void run_client(){
     int cl_sock;
     struct sockaddr_in server_address;
-    //char buffer[BUFFER_SIZE];
+    
 
     
     if((cl_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0){
@@ -137,7 +136,6 @@ void run_client(){
         exit(EXIT_FAILURE);
     }
 
-    printf(":: Connected to [name] :: Type message || Type 'quit()' to exit.\n");
     comms_loop(cl_sock);
     close(cl_sock);
     return;
@@ -149,86 +147,79 @@ void run_client(){
 /* Begin comms_loop()*/
 /********************/
 void comms_loop(int ne_socket){
+    fd_set readfds; 
     char buffer[BUFFER_SIZE];
+    unsigned char ciphertxt[BUFFER_SIZE];
+    unsigned char plaintext[BUFFER_SIZE];
+    int max_fd;
 
-    //Create new thread for receiving messages
-    pthread_t receiver_thread;
-    pthread_create(&receiver_thread, NULL, msg_receiver, &ne_socket );
+    if(ne_socket > STDIN_FILENO){
+        max_fd = ne_socket;
+    }else{
+        max_fd = STDIN_FILENO;
+    }
+
+    printf(":: Connected to [name] :: \n");
+    printf(":: Type message || Type 'quit()' to exit ::\n");
 
     while(chat_running){
-        memset(buffer, 0, BUFFER_SIZE); // clear buffer
-        
-        if(!chat_running) break;
+        FD_ZERO(&readfds);
+        FD_SET(ne_socket, &readfds); // monitors network
+        FD_SET(STDIN_FILENO, &readfds); // monitors keyboard, stdin
 
-        fgets(buffer, BUFFER_SIZE, stdin); //Get input form user
+        if (select(max_fd + 1, &readfds, NULL, NULL, NULL) < 0){
+            perror("!! Select Error");
+            break;
+        }
 
-        // strip the '/n' from the end
-        buffer[strcspn(buffer, "\n")] = '\0'; 
+        //Check for user input
+        if(FD_ISSET(STDIN_FILENO, &readfds)){
+            memset(buffer, 0, BUFFER_SIZE); // Clears the buffer
+            printf(">>");
+            if(fgets(buffer, sizeof(buffer), stdin) == NULL){
+                printf("!! Input Stream Closed");
+                break;
+            }
 
-        if(strcmp(buffer, "quit()") == 0){
-            unsigned char ciphertxt[BUFFER_SIZE];
+            // strip the '/n' from the end
+            buffer[strcspn(buffer, "\n")] = '\0'; 
+            
+            // Encrypt and Send
             int ciphertext_len = aes_encrypt((unsigned char*)buffer, strlen(buffer), ciphertxt);
             send(ne_socket, ciphertxt, ciphertext_len, 0);
 
-            chat_running = false;
-            shutdown(ne_socket, SHUT_RDWR);
-            break;
+            if(strcmp(buffer, "quit()") == 0){
+                shutdown(ne_socket, SHUT_RDWR);
+                break;
+            }
         }
-        if(!chat_running) break;
-        
-        unsigned char ciphertxt[BUFFER_SIZE];
-        int ciphertext_len = aes_encrypt((unsigned char*)buffer, strlen(buffer), ciphertxt);
-        send(ne_socket, ciphertxt, ciphertext_len, 0);
+
+        //Check for network data
+        if(FD_ISSET(ne_socket, &readfds)){
+            int bytes_received = recv(ne_socket, buffer, BUFFER_SIZE, 0); // reads the size of the incoming message
+       
+            if(bytes_received <= 0){ // if no bytes come in the connection is closed
+                printf("!! Connection Ended.\n");
+                break;
+            }
+
+            // Decryption funtion for received data    
+            int plaintext_len = aes_decrypt((unsigned char*)buffer, bytes_received, plaintext);
+            plaintext[plaintext_len] = '\0'; // Null-terminate
+
+            // Check if the quit() cmd was sent
+            if(strcmp((char*)plaintext, "quit()") == 0){
+                    printf(":: Chat ended by [name].\n");
+                    break;
+            }
+            printf("[name] >> %s\n", plaintext);
+        }
     }
-    pthread_join(receiver_thread, NULL);
-    printf("::Message loop ended.\n");
-    
+    printf(":: Chat Session Ended ::\n");
 }
 /* End comms_loop() */
 /***************************************************************/
 
-/***************************/
-/*  Begin msg_receiver()  */
-/************************ */
-//When a connection is made a thread is created to receive the incoming messages, 
-//this function is called by the new thread. 
-
-void *msg_receiver(void *arg){
-    int sock = *(int *)arg; //the incoming socket from the function argument
-    char buffer[BUFFER_SIZE];
-
-    while(chat_running){
-        memset(buffer, 0, BUFFER_SIZE); // Clears the buffer
-        int bytes_received = recv(sock, buffer, BUFFER_SIZE, 0); // reads the size of the incoming message
-       
-        if(bytes_received <= 0){ // if no bytes come in the connection is closed
-            printf("!! Connection Lost\n");
-            chat_running = false;
-            break;
-        }
-        // Decryption funtion for received data
-        unsigned char plaintext[BUFFER_SIZE];
-        int plaintext_len = aes_decrypt((unsigned char*)buffer, bytes_received, plaintext);
-        plaintext[plaintext_len] = '\0'; // Null-terminate
-
-        // debug
-        printf("[DEBUG] Received plaintext: '%s'\n", plaintext);
-        printf("[DEBUG] Result of strcmp: %d \n", strcmp((char*)plaintext, "quit()"));
-        // End debug
-
-        if(strcmp((char*)plaintext, "quit()") == 0){
-            printf(":: Chat ended.\n");
-            chat_running = false;
-            break;
-        }
-        printf("[Name]: %s\n", plaintext);
-    }
-
-    printf("::Receiver thread closing\n");
-    pthread_exit(NULL);
-}
-/* End msg_receiver() */
-/****************************************************************/
 
 /********************/
 /* Begin generate_aes_key_iv() */
@@ -249,20 +240,20 @@ int aes_encrypt(const unsigned char *plaintxt, int plaintxt_len, unsigned char *
 
     // intialize the cipher context
     if(!(ctx = EVP_CIPHER_CTX_new())){
-        perror("CTX not initialized");
+        perror("!! CTX not initialized");
     }
     // initialize the encryptiong operation
     if(EVP_EncryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, aes_key, aes_iv) != 1){
-        perror("Encrypt Op not Initialized");
+        perror("!! Encrypt Op not Initialized");
     }
     // Provide message to be encrypted
     if(EVP_EncryptUpdate(ctx, ciphertxt, &len, plaintxt, plaintxt_len) != 1){
-        perror("Error encrypting message");
+        perror("!! Error encrypting message");
     }
     ciphertxt_len = len;
     // Finalize encryption
     if(EVP_EncryptFinal_ex(ctx, ciphertxt + len, &len) != 1){
-        perror("Error Finalizing encryption");
+        perror("!!Error Finalizing encryption");
     }
     ciphertxt_len += len;
 
@@ -283,21 +274,21 @@ int aes_decrypt(const unsigned char *ciphertxt, int ciphertxt_len, unsigned char
 
     // intialize the cipher context
     if(!(ctx = EVP_CIPHER_CTX_new())){
-        perror("CTX not initialized");
+        perror("!! CTX not initialized");
     }
     // initialize the decryption operation
     if(EVP_DecryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, aes_key, aes_iv) != 1){
-        perror("Decrypt Op not Initialized");
+        perror("!! Decrypt Op not Initialized");
     }
     // Provide message to be decrypted
     if(EVP_DecryptUpdate(ctx, plaintxt, &len, ciphertxt, ciphertxt_len) != 1){
-        perror("Error decrypting message");
+        perror("!! Error decrypting message");
     }
     plaintxt_len = len;
 
     // Finalize encryption
     if(EVP_DecryptFinal_ex(ctx, plaintxt + len, &len) != 1){
-        perror("Error Finalizing decryption");
+        perror("!! Error Finalizing decryption");
     }
     plaintxt_len += len;
 
