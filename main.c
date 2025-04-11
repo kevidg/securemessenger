@@ -155,23 +155,33 @@ void comms_loop(int ne_socket){
     pthread_t receiver_thread;
     pthread_create(&receiver_thread, NULL, msg_receiver, &ne_socket );
 
-    while(1){
+    while(chat_running){
         memset(buffer, 0, BUFFER_SIZE); // clear buffer
+        
+        if(!chat_running) break;
+
         fgets(buffer, BUFFER_SIZE, stdin); //Get input form user
-        buffer[strcspn(buffer, "\n")] = '\0'; // strip the '/n' from the end
+
+        // strip the '/n' from the end
+        buffer[strcspn(buffer, "\n")] = '\0'; 
 
         if(strcmp(buffer, "quit()") == 0){
             unsigned char ciphertxt[BUFFER_SIZE];
             int ciphertext_len = aes_encrypt((unsigned char*)buffer, strlen(buffer), ciphertxt);
             send(ne_socket, ciphertxt, ciphertext_len, 0);
+
+            chat_running = false;
             shutdown(ne_socket, SHUT_RDWR);
             break;
         }
+        if(!chat_running) break;
+        
         unsigned char ciphertxt[BUFFER_SIZE];
         int ciphertext_len = aes_encrypt((unsigned char*)buffer, strlen(buffer), ciphertxt);
         send(ne_socket, ciphertxt, ciphertext_len, 0);
     }
     pthread_join(receiver_thread, NULL);
+    printf("::Message loop ended.\n");
     
 }
 /* End comms_loop() */
@@ -187,26 +197,34 @@ void *msg_receiver(void *arg){
     int sock = *(int *)arg; //the incoming socket from the function argument
     char buffer[BUFFER_SIZE];
 
-    while(1){
+    while(chat_running){
         memset(buffer, 0, BUFFER_SIZE); // Clears the buffer
         int bytes_received = recv(sock, buffer, BUFFER_SIZE, 0); // reads the size of the incoming message
+       
         if(bytes_received <= 0){ // if no bytes come in the connection is closed
             printf("!! Connection Lost\n");
+            chat_running = false;
             break;
         }
-
+        // Decryption funtion for received data
         unsigned char plaintext[BUFFER_SIZE];
         int plaintext_len = aes_decrypt((unsigned char*)buffer, bytes_received, plaintext);
         plaintext[plaintext_len] = '\0'; // Null-terminate
+
         // debug
-       // printf("[DEBUG] Received plaintext: '%s'\n", plaintext);
+        printf("[DEBUG] Received plaintext: '%s'\n", plaintext);
+        printf("[DEBUG] Result of strcmp: %d \n", strcmp((char*)plaintext, "quit()"));
         // End debug
+
         if(strcmp((char*)plaintext, "quit()") == 0){
             printf(":: Chat ended.\n");
+            chat_running = false;
             break;
         }
         printf("[Name]: %s\n", plaintext);
     }
+
+    printf("::Receiver thread closing\n");
     pthread_exit(NULL);
 }
 /* End msg_receiver() */

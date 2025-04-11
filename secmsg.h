@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/select.h>
@@ -41,6 +42,7 @@ int aes_encrypt(const unsigned char *plaintxt, int plaintxt_len, unsigned char *
 int aes_decrypt(const unsigned char *ciphertxt, int ciphertxt_len, unsigned char *plaintxt);
 
 /* ~~~~~~ Globals ~~~~~*/
+volatile int chat_running = true;
 char *IP_ADDRESS = "127.0.0.1";
 
 //Cipher variables
