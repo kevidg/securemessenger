@@ -34,7 +34,7 @@ int validate_ip(const char *in_addr);
 void run_server(); // The server side of network connnection, waits for client to connect
 void run_client(); // The client side of the network connection
 void comms_loop(int sock_fd); // The function accepts a socket file descriptor and maintains a communication loop
-void *msg_receiver(void *arg); // A function called by the thread for receiving a message
+//void *msg_receiver(void *arg); // A function called by the thread for receiving a message
 
 //Encrption Functions
 void generate_aes_key_iv();
@@ -42,7 +42,7 @@ int aes_encrypt(const unsigned char *plaintxt, int plaintxt_len, unsigned char *
 int aes_decrypt(const unsigned char *ciphertxt, int ciphertxt_len, unsigned char *plaintxt);
 
 /* ~~~~~~ Globals ~~~~~*/
-volatile int chat_running = true;
+//volatile int chat_running = true;
 char *IP_ADDRESS = "127.0.0.1";
 
 //Cipher variables
