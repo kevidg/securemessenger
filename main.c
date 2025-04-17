@@ -1,5 +1,11 @@
 #include "secmsg.h"
 
+// Global variable definitions
+volatile int chat_running = 1;
+char *IP_ADDRESS = "127.0.0.1";
+unsigned char aes_key[16] = "myonlypasswordis";
+unsigned char aes_iv[16] = "iforgotwhatisaid";
+
 
 /*****************/
 /* Start Here */
@@ -92,7 +98,18 @@ void run_server(){
         exit(EXIT_FAILURE);
     } 
 
+    // Add DH exchange
+    unsigned long shared_secret = perform_dh_server(client_socket);
+    if (shared_secret == 0) {
+        close(client_socket);
+        close(server_socket);
+        exit(EXIT_FAILURE);
+    }
     
+    // Use shared_secret to generate AES key
+    // For now, just copy it into the key (not secure, just for demonstration)
+    memcpy(aes_key, &shared_secret, sizeof(shared_secret));
+    generate_aes_key_iv(); // Still generate random IV
     
     comms_loop(client_socket);
 
@@ -126,6 +143,17 @@ void run_client(){
         exit(EXIT_FAILURE);
     }
 
+    // Add DH exchange
+    unsigned long shared_secret = perform_dh_client(cl_sock);
+    if (shared_secret == 0) {
+        close(cl_sock);
+        exit(EXIT_FAILURE);
+    }
+    
+    // Use shared_secret to generate AES key
+    memcpy(aes_key, &shared_secret, sizeof(shared_secret));
+    generate_aes_key_iv(); // Still generate random IV
+    
     comms_loop(cl_sock);
     close(cl_sock);
 }

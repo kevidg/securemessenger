@@ -23,7 +23,8 @@ Maybe move to a header file??
 /*****************************/
 #define SERVER_PORT 31337
 #define BUFFER_SIZE 1024
-
+#define DH_P 23 // Prime number (use much larger in production)
+#define DH_G 5  // Generator (primitive root of P)
 
 /* ~~~~~ Function Prototypes ~~~~~~
 /////////////////////////////////////*/
@@ -41,13 +42,17 @@ void generate_aes_key_iv();
 int aes_encrypt(const unsigned char *plaintxt, int plaintxt_len, unsigned char *ciphertxt);
 int aes_decrypt(const unsigned char *ciphertxt, int ciphertxt_len, unsigned char *plaintxt);
 
+// Diffie-Hellman Functions
+unsigned long perform_dh_server(int client_socket);
+unsigned long perform_dh_client(int server_socket);
+unsigned long power_mod(unsigned long base, unsigned long exp, unsigned long mod);
+
 /* ~~~~~~ Globals ~~~~~*/
-//volatile int chat_running = true;
-char *IP_ADDRESS = "127.0.0.1";
+extern volatile int chat_running;
+extern char *IP_ADDRESS;
 
 //Cipher variables
-// For testing these are hard coded keys and IVs
-unsigned char aes_key[16] = "myonlypasswordis";
-unsigned char aes_iv[16] = "iforgotwhatisaid";
+extern unsigned char aes_key[16];
+extern unsigned char aes_iv[16];
 
 #endif // SECMSG_HEADERS_H
