@@ -21,7 +21,7 @@ int main(int argc, char *argv[]){
                 break;
             case '?':
             default:
-               fprintf(stderr, "Usage: %s -s <ip_address>\n", argv[0]);
+               fprintf(stderr, "Usage: %s -c -s [your name]\n", argv[0]);
                return -1;
         }
     } // End Arg Parser While loop
@@ -129,7 +129,7 @@ void run_client(){
     // The following function takes a string(IP_ADDRESS) and converts to an IPv4 binary and stores it 
     // in the sockaddr_in struct (server_address)
     inet_pton(AF_INET, IP_ADDRESS, &server_address.sin_addr);
-
+    // Try to connect to the server
     if(connect(cl_sock, (struct sockaddr *)&server_address, sizeof(server_address)) < 0){
         perror("!! Connection failure");
         close(cl_sock);

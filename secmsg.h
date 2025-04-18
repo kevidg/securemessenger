@@ -44,6 +44,7 @@ int aes_decrypt(const unsigned char *ciphertxt, int ciphertxt_len, unsigned char
 /* ~~~~~~ Globals ~~~~~*/
 //volatile int chat_running = true;
 char *IP_ADDRESS = "127.0.0.1";
+bool chat_running = true;
 
 //Cipher variables
 // For testing these are hard coded keys and IVs
