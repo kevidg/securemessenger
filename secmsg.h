@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <pwd.h>
+#include <time.h>
 #include <unistd.h>
 #include <sys/select.h>
 #include <getopt.h>
@@ -13,7 +15,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <pthread.h>
+
 #include <openssl/evp.h>
 #include <openssl/rand.h>
 
@@ -29,6 +31,7 @@ Maybe move to a header file??
 /////////////////////////////////////*/
 // User Input Functions
 int validate_ip(const char *in_addr);
+const char *get_default_name();
 
 // Network Functions
 void run_server(); // The server side of network connnection, waits for client to connect
@@ -40,6 +43,9 @@ void comms_loop(int sock_fd); // The function accepts a socket file descriptor a
 void generate_aes_key_iv();
 int aes_encrypt(const unsigned char *plaintxt, int plaintxt_len, unsigned char *ciphertxt);
 int aes_decrypt(const unsigned char *ciphertxt, int ciphertxt_len, unsigned char *plaintxt);
+
+//File & Logging Functions
+void log_msg(const char *filename, const char *sender, const char *message);
 
 /* ~~~~~~ Globals ~~~~~*/
 //volatile int chat_running = true;

@@ -5,26 +5,31 @@
 /*vvvvvvvvvvvvvvvv*/
 int main(int argc, char *argv[]){
     // Arg Parser
-    int opt;
-    char *user_in_addr = NULL;
+    int opt, is_client=0, is_server=0;
+    char *username = NULL;
 
     OpenSSL_add_all_algorithms();
     //generate_aes_key_iv();
 
-    while((opt = getopt(argc, argv, "cs")) != -1){
+    while((opt = getopt(argc, argv, "csn:")) != -1){
         switch (opt){
             case 'c':
-                run_client();
+                is_client = 1;
                 break;
             case 's':
-                run_server();
+                is_server=1;
                 break;
-            case '?':
+            case 'n':
+                username = optarg;
+                break;
             default:
-               fprintf(stderr, "Usage: %s -c -s [your name]\n", argv[0]);
+               fprintf(stderr, "Usage: %s -c|-s [-n username]\n", argv[0]);
                return -1;
         }
     } // End Arg Parser While loop
+    if(!username){
+        username = (char *)get_default_name();
+    }
 
     //IP check
     /*
@@ -152,6 +157,8 @@ void comms_loop(int ne_socket){
     unsigned char ciphertxt[BUFFER_SIZE];
     unsigned char plaintext[BUFFER_SIZE];
     int max_fd;
+    // Text file for log
+    const char *msgLog = "chat_log.txt";
 
     if(ne_socket > STDIN_FILENO){
         max_fd = ne_socket;
@@ -189,6 +196,8 @@ void comms_loop(int ne_socket){
                 fflush(stdout);
                 continue;
             } 
+            // Write to log
+            log_msg(msgLog, "You", buffer);
             
             // Encrypt and Send
             int ciphertext_len = aes_encrypt((unsigned char*)buffer, strlen(buffer), ciphertxt);
@@ -212,6 +221,9 @@ void comms_loop(int ne_socket){
             // Decryption funtion for received data    
             int plaintext_len = aes_decrypt((unsigned char*)buffer, bytes_received, plaintext);
             plaintext[plaintext_len] = '\0'; // Null-terminate
+
+            //Write to log
+            log_msg(msgLog, "[name]", (char *)plaintext);
 
             // Check if the quit() cmd was sent
             if(strcasecmp((char*)plaintext, "/quit") == 0){
@@ -305,6 +317,37 @@ int aes_decrypt(const unsigned char *ciphertxt, int ciphertxt_len, unsigned char
 }
 /* End aes_decrypt()*/
 /*****************************************************************************/
+
+/**************** */
+/*Begin log_msg() */
+/**************** */
+void log_msg(const char *filename, const char *sender, const char *message){
+    FILE *fp = fopen(filename, "a");
+    if(!fp){
+        perror("Cannot open file");
+        return;
+    }
+
+    //Write to the log
+    fprintf(fp, "%s >> %s\n", sender, message);
+    fclose(fp);
+}
+/* End log_msg()*/
+/***********************************************************************************/
+
+/****************** */
+/* Begin get_default_name()*/
+/********************* */
+const char *get_default_name(){
+    struct passwd *pw = getpwuid(getuid());
+    if(pw){
+        return pw -> pw_name;
+    }
+    else
+        return "NoNameLoser";
+}
+/* End get_default_name()*/
+/***********************************************************************************/
 
 /***************** */
 /*Input Validation*/
