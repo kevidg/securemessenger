@@ -23,31 +23,25 @@ int main(int argc, char *argv[]){
                 username = optarg;
                 break;
             default:
-               fprintf(stderr, "Usage: %s -c|-s [-n username]\n", argv[0]);
+               fprintf(stderr, "Usage: %s -c | -s [-n username]\n", argv[0]);
                return -1;
         }
     } // End Arg Parser While loop
     if(!username){
+        //Get's the users logon id from system if a username isn't supplied
         username = (char *)get_default_name();
     }
 
-    //IP check
-    /*
-    if(user_in_addr == NULL){
-        fprintf(stderr, "!! Error: Please provide an IP Address.\n");
-        fprintf(stderr, "Usage: %s -i <ip_address>\n", argv[0]);
-        return 1;
+    if(is_client){
+        run_client(username);
     }
-
-    if (validate_ip(user_in_addr)){
-        printf("## Connecting to IP Address: %s\n", user_in_addr);
-        run_client();
+    else if(is_server){
+        run_server(username);
     }
     else{
-        fprintf(stderr, "!! Error: Invalid IP address");
+        fprintf(stderr, "Please choose option -c or -s\n");
     }
-
-    */
+    
 
 } 
 
@@ -59,7 +53,7 @@ int main(int argc, char *argv[]){
 /************************/
 /* Begin run_server() */
 /************************/
-void run_server(){
+void run_server(const char *username){
     /************************/
     /* Server Listener code */
 
@@ -103,9 +97,17 @@ void run_server(){
         exit(EXIT_FAILURE);
     } 
 
+    //Exchange names in clear before calling comms_loop
+    //For demonstration purposes
+    send(client_socket, username, strlen(username), 0);
+    //Receive contact username;
+    char contact_name[64]={0};
+    recv(client_socket, contact_name, sizeof(contact_name), 0);
+    //debug
+    printf("[DEBUG]: CONTACT NAME: %s\n", contact_name);
+    printf("[DEBUG]: USER NAME: %s\n", username);
     
-    
-    comms_loop(client_socket);
+    comms_loop(client_socket, username, contact_name);
 
     close(server_socket);
      
@@ -118,7 +120,7 @@ void run_server(){
 /********************/
 /* Begin run_client()*/
 /********************/
-void run_client(){
+void run_client(const char *username){
     int cl_sock;
     struct sockaddr_in server_address;
     
@@ -140,8 +142,15 @@ void run_client(){
         close(cl_sock);
         exit(EXIT_FAILURE);
     }
+    //Receive Server username;
+    char contact_name[64]={0};
+    recv(cl_sock, contact_name, sizeof(contact_name), 0);
+    send(cl_sock, username, sizeof(username), 0);
+    //debug
+    printf("[DEBUG]: CONTACT NAME: %s\n", contact_name);
+    printf("[DEBUG]: USER NAME: %s\n", username);
 
-    comms_loop(cl_sock);
+    comms_loop(cl_sock, username, contact_name);
     close(cl_sock);
     return;
 }
@@ -151,7 +160,7 @@ void run_client(){
 /********************/
 /* Begin comms_loop()*/
 /********************/
-void comms_loop(int ne_socket){
+void comms_loop(int ne_socket, const char *username, const char *contact_name){
     fd_set readfds; 
     char buffer[BUFFER_SIZE];
     unsigned char ciphertxt[BUFFER_SIZE];
@@ -166,8 +175,8 @@ void comms_loop(int ne_socket){
         max_fd = STDIN_FILENO;
     }
 
-    printf(":: Connected to [name] :: \n");
-    printf(":: Type message || Type '/quit' to exit ::\n");
+    printf(":: Connected to [%s] :: \n", username);
+    printf(":: Type '/quit' to exit ::\n");
 
     while(chat_running){
         FD_ZERO(&readfds);
@@ -223,11 +232,11 @@ void comms_loop(int ne_socket){
             plaintext[plaintext_len] = '\0'; // Null-terminate
 
             //Write to log
-            log_msg(msgLog, "[name]", (char *)plaintext);
+            log_msg(msgLog, username, (char *)plaintext);
 
             // Check if the quit() cmd was sent
             if(strcasecmp((char*)plaintext, "/quit") == 0){
-                    printf(":: Chat ended by [name].\n");
+                    printf(":: Chat ended by [%s].\n", username);
                     break;
             }
             printf("[name] >> %s\n", plaintext);
@@ -352,6 +361,24 @@ const char *get_default_name(){
 /***************** */
 /*Input Validation*/
 /**************** */
+//IP check
+    /*
+    if(user_in_addr == NULL){
+        fprintf(stderr, "!! Error: Please provide an IP Address.\n");
+        fprintf(stderr, "Usage: %s -i <ip_address>\n", argv[0]);
+        return 1;
+    }
+
+    if (validate_ip(user_in_addr)){
+        printf("## Connecting to IP Address: %s\n", user_in_addr);
+        run_client();
+    }
+    else{
+        fprintf(stderr, "!! Error: Invalid IP address");
+    }
+
+    */
+/*
 int validate_ip(const char *in_addr){
     int segments = 0;
     int num;
