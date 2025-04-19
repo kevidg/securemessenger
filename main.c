@@ -175,7 +175,7 @@ void comms_loop(int ne_socket, const char *username, const char *contact_name){
         max_fd = STDIN_FILENO;
     }
 
-    printf(":: Connected to [%s] :: \n", username);
+    printf(":: Connected to [%s] :: \n", contact_name);
     printf(":: Type '/quit' to exit ::\n");
 
     while(chat_running){
@@ -206,7 +206,7 @@ void comms_loop(int ne_socket, const char *username, const char *contact_name){
                 continue;
             } 
             // Write to log
-            log_msg(msgLog, "You", buffer);
+            log_msg(msgLog, username, buffer);
             
             // Encrypt and Send
             int ciphertext_len = aes_encrypt((unsigned char*)buffer, strlen(buffer), ciphertxt);
@@ -232,14 +232,14 @@ void comms_loop(int ne_socket, const char *username, const char *contact_name){
             plaintext[plaintext_len] = '\0'; // Null-terminate
 
             //Write to log
-            log_msg(msgLog, username, (char *)plaintext);
+            log_msg(msgLog, contact_name, (char *)plaintext);
 
             // Check if the quit() cmd was sent
             if(strcasecmp((char*)plaintext, "/quit") == 0){
-                    printf(":: Chat ended by [%s].\n", username);
+                    printf(":: Chat ended by [%s].\n", contact_name);
                     break;
             }
-            printf("[name] >> %s\n", plaintext);
+            printf("[%s] >> %s\n", contact_name, plaintext);
         }
     }
     printf(":: Chat Session Ended ::\n");
