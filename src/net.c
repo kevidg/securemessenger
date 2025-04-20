@@ -1,5 +1,15 @@
 #include "net.h"
 
+/* ~~~~~~ Globals ~~~~~*/
+//volatile int chat_running = true;
+char *IP_ADDRESS = "127.0.0.1";
+bool chat_running = true;
+
+//Cipher variables
+// For testing these are hard coded keys and IVs
+unsigned char aes_key[16] = "myonlypasswordis";
+unsigned char aes_iv[16] = "iforgotwhatisaid";
+
 /************************/
 /* Begin run_server() */
 /************************/
