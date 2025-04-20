@@ -1,23 +1,21 @@
 // secmsg.h
-#ifndef SECMSG_HEADERS_H
-#define SECMSG_HEADERS_H
+#ifndef SECMSG_H
+#define SECMSG_H
 
-#include <stdio.h>
-#include <stdlib.h>
+
 #include <stdbool.h>
-#include <string.h>
+
 #include <pwd.h>
 #include <time.h>
-#include <unistd.h>
+
 #include <sys/select.h>
 #include <getopt.h>
 #include <ctype.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 
-#include <openssl/evp.h>
-#include <openssl/rand.h>
+#include <netinet/in.h>
+
+
+
 
 /* !!!!!!!!!!!!!!!!!!!!!!!!! */
 /*    DEFINE stuff here  
@@ -33,16 +31,8 @@ Maybe move to a header file??
 int validate_ip(const char *in_addr);
 const char *get_default_name();
 
-// Network Functions
-void run_server(const char *username); // The server side of network connnection, waits for client to connect
-void run_client(const char *username); // The client side of the network connection
-void comms_loop(int sock_fd, const char *useername, const char *contact_name); // The function accepts a socket file descriptor and maintains a communication loop
-//void *msg_receiver(void *arg); // A function called by the thread for receiving a message
 
-//Encrption Functions
-void generate_aes_key_iv();
-int aes_encrypt(const unsigned char *plaintxt, int plaintxt_len, unsigned char *ciphertxt);
-int aes_decrypt(const unsigned char *ciphertxt, int ciphertxt_len, unsigned char *plaintxt);
+
 
 //File & Logging Functions
 void log_msg(const char *filename, const char *sender, const char *message);
