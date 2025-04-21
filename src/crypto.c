@@ -1,5 +1,9 @@
 #include "crypto.h"
 
+unsigned char aes_key[16] ="myonlypasswordis"; // AES key
+unsigned char aes_iv[16]= "iforgotwhatisaid"; // AES IV
+
+
 /********************/
 /* Begin generate_aes_key_iv() */
 /*********************/

@@ -7,7 +7,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 
-/ User Input Functions
+// User Input Functions
 int validate_ip(const char *in_addr);
 const char *get_default_name();
 
