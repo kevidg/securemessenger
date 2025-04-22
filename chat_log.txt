@@ -1,0 +1,6 @@
+user >> please
+user >> please
+user >> work
+user >> work
+user >> /quit
+user >> /quit

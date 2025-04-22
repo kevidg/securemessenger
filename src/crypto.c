@@ -82,3 +82,14 @@ int aes_decrypt(const unsigned char *ciphertxt, int ciphertxt_len, unsigned char
 }
 /* End aes_decrypt()*/
 /*****************************************************************************/
+
+/**********************/
+/* Begin set_crypto_key() */
+/**********************/
+int set_crypto_key(const unsigned char *key, size_t keylen) {
+    if (keylen != 16 && keylen != 32) return -1;
+    memcpy(aes_key, key, 16);  // Only use first 16 bytes for AES-128
+    return 0;
+}
+/* End set_crypto_key() */
+/*****************************************************************************/

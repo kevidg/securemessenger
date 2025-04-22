@@ -1,6 +1,7 @@
 #include "net.h"
 #include "crypto.h"
 #include "secmsg.h"
+#include "dh.h"  // Add this include
 
 char *IP_ADDRESS = "127.0.0.1";
 bool chat_running = true; // Global variable to control the chat loop
@@ -53,6 +54,28 @@ void run_server(const char *username){
         exit(EXIT_FAILURE);
     } 
 
+    // Perform DH key exchange before username exchange
+    printf("Server: Starting DH key exchange...\n");
+    unsigned char session_key[32];  // Increased size for stronger key
+    if (perform_dh_exchange_server(client_socket, session_key) != 0) {
+        printf("Server: DH exchange failed\n");
+        close(client_socket);
+        close(server_socket);
+        return;
+    }
+    printf("Server: DH exchange completed successfully\n");
+
+    // Set up encryption with new session key
+    if (set_crypto_key(session_key, 32) != 0) {
+        printf("Server: Failed to set session key\n");
+        close(client_socket);
+        close(server_socket);
+        return;
+    }
+
+    // Clear session key from memory
+    memset(session_key, 0, sizeof(session_key));
+
     //Exchange names in clear before calling comms_loop
     //For demonstration purposes
     send(client_socket, username, strlen(username), 0);
@@ -98,7 +121,28 @@ void run_client(const char *username){
         close(cl_sock);
         exit(EXIT_FAILURE);
     }
-    //Receive Server username;
+
+    // Perform DH key exchange before username exchange
+    printf("Client: Starting DH key exchange...\n");
+    unsigned char session_key[32];  // Increased size for stronger key
+    if (perform_dh_exchange_client(cl_sock, session_key) != 0) {
+        printf("Client: DH exchange failed\n");
+        close(cl_sock);
+        return;
+    }
+    printf("Client: DH exchange completed successfully\n");
+
+    // Set up encryption with new session key
+    if (set_crypto_key(session_key, 32) != 0) {
+        printf("Client: Failed to set session key\n");
+        close(cl_sock);
+        return;
+    }
+
+    // Clear session key from memory
+    memset(session_key, 0, sizeof(session_key));
+
+//Receive Server username;
     char contact_name[64]={0};
     recv(cl_sock, contact_name, sizeof(contact_name), 0);
     send(cl_sock, username, sizeof(username), 0);
@@ -201,4 +245,94 @@ void comms_loop(int ne_socket, const char *username, const char *contact_name){
     printf(":: Chat Session Ended ::\n");
 }
 /* End comms_loop() */
+/***************************************************************/
+
+/********************/
+/* Begin perform_dh_exchange_server() */
+/********************/
+int perform_dh_exchange_server(int client_socket, unsigned char *session_key) {
+    dh_keys_t keys = {0};
+    unsigned char received_pubkey[384];  // Increased buffer size to match dh_keys_t
+    int ret = -1;
+
+    // Generate our DH keypair
+    if (generate_dh_keys(&keys) != 0) {
+        printf("Server: Failed to generate DH keys\n");
+        return -1;
+    }
+
+    // Send our public key to client
+    if (send(client_socket, keys.public_key, sizeof(keys.public_key), 0) != sizeof(keys.public_key)) {
+        printf("Server: Failed to send public key\n");
+        goto cleanup;
+    }
+
+    // Receive client's public key
+    ssize_t received = recv(client_socket, received_pubkey, sizeof(received_pubkey), 0);
+    if (received != sizeof(received_pubkey)) {
+        printf("Server: Failed to receive client's public key\n");
+        goto cleanup;
+    }
+
+    // Compute shared secret
+    if (compute_shared_secret(&keys, received_pubkey, sizeof(received_pubkey)) != 0) {
+        printf("Server: Failed to compute shared secret\n");
+        goto cleanup;
+    }
+
+    // Use first 32 bytes of shared secret as session key
+    memcpy(session_key, keys.shared_secret, 32);
+    ret = 0;
+
+cleanup:
+    // Securely wipe sensitive data
+    secure_zero(&keys, sizeof(keys));
+    return ret;
+}
+/* End perform_dh_exchange_server() */
+/***************************************************************/
+
+/********************/
+/* Begin perform_dh_exchange_client() */
+/********************/
+int perform_dh_exchange_client(int server_socket, unsigned char *session_key) {
+    dh_keys_t keys = {0};
+    unsigned char received_pubkey[384];  // Increased buffer size to match dh_keys_t
+    int ret = -1;
+
+    // Generate our DH keypair
+    if (generate_dh_keys(&keys) != 0) {
+        printf("Client: Failed to generate DH keys\n");
+        return -1;
+    }
+
+    // Receive server's public key
+    ssize_t received = recv(server_socket, received_pubkey, sizeof(received_pubkey), 0);
+    if (received != sizeof(received_pubkey)) {
+        printf("Client: Failed to receive server's public key\n");
+        goto cleanup;
+    }
+
+    // Send our public key to server
+    if (send(server_socket, keys.public_key, sizeof(keys.public_key), 0) != sizeof(keys.public_key)) {
+        printf("Client: Failed to send public key\n");
+        goto cleanup;
+    }
+
+    // Compute shared secret
+    if (compute_shared_secret(&keys, received_pubkey, sizeof(received_pubkey)) != 0) {
+        printf("Client: Failed to compute shared secret\n");
+        goto cleanup;
+    }
+
+    // Use first 32 bytes of shared secret as session key
+    memcpy(session_key, keys.shared_secret, 32);
+    ret = 0;
+
+cleanup:
+    // Securely wipe sensitive data
+    secure_zero(&keys, sizeof(keys));
+    return ret;
+}
+/* End perform_dh_exchange_client() */
 /***************************************************************/
