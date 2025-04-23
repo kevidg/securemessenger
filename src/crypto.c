@@ -1,3 +1,14 @@
+/* The crypto.c file contains the code for the aes symmetric encryption
+    The implementation follows the example given in the OpenSSL wiki on
+    EVP aes encryption. In this code the key and iv are hardcoded but will also
+    use a session key provided from the dh.c functions. 
+    The aes_encrypt() instantiates a cipher context which utilizes the AES 128 bit algorithm
+    and the Cipher Block Chaining method of diffusion. Since this project is intended for
+    academic purposes it does not use a stronger type of encryption in order to simplify the
+    code for analysis. 
+    Example code: https://wiki.openssl.org/index.php/EVP_Symmetric_Encryption_and_Decryption
+    Attr: Michael Guerette (MDG), Jay Patel  */
+
 #include "crypto.h"
 
 unsigned char aes_key[16] ="myonlypasswordis"; // AES key

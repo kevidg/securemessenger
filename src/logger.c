@@ -1,3 +1,6 @@
+/* logger.c is the code for logging the chat text to a local file
+    Attr: Alice Deleon*/
+
 #include "logger.h"
 
 /**************** */

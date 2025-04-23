@@ -1,3 +1,5 @@
+/* dh.c is the Diffie-Hellman key exchange implementation for the secure messenger app
+    Attr: Jay Patel*/
 #include "dh.h"
 #include <openssl/bn.h>
 #include <openssl/crypto.h>

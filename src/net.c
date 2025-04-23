@@ -1,14 +1,30 @@
+/**************************************/
+/* The net.c file provides the server and client socket code and 
+    the communications loop for exchanging text between the users. 
+    The networking code follows the examples from websites such as
+    https://www.geeksforgeeks.org/socket-programming-cc/
+    Attr: Jay Patel, Michael Guerette (MDG)*/
+
 #include "net.h"
 #include "crypto.h"
 #include "secmsg.h"
 #include "dh.h"  // Add this include
+
+
 
 char *IP_ADDRESS = "127.0.0.1";
 bool chat_running = true; // Global variable to control the chat loop
 
 
 /************************/
-/* Begin run_server() */
+/* Begin run_server() 
+    This function starts a server listening on port 31337 using the loopback address
+    After receiving a connection the DH key exchange is performed 
+    then the usernames are exchanged in clear text for demonstration purposes
+    The username is the one provided from main() and get_default_user()
+    The contact name is provided from the client and exchanged over the TCP connection
+    It then calls the communication loop function and passes the socket info, username, and contact name
+    Attr: (MDG)*/
 /************************/
 void run_server(const char *username){
     /************************/
@@ -83,8 +99,8 @@ void run_server(const char *username){
     char contact_name[64]={0};
     recv(client_socket, contact_name, sizeof(contact_name), 0);
     //debug
-    printf("[DEBUG]: CONTACT NAME: %s\n", contact_name);
-    printf("[DEBUG]: USER NAME: %s\n", username);
+    //printf("[DEBUG]: CONTACT NAME: %s\n", contact_name);
+    //printf("[DEBUG]: USER NAME: %s\n", username);
     
     comms_loop(client_socket, username, contact_name);
 
@@ -97,7 +113,11 @@ void run_server(const char *username){
 /*****************************************************************/
 
 /********************/
-/* Begin run_client()*/
+/* Begin run_client()
+    Similar to the run_server() function, but the client-side of the TCP connection
+    It also exchanges DH key info and then the usernames
+    Then calls the communication loop function and passes the socket info, username, and contact name
+    Attr: (MDG) */
 /********************/
 void run_client(const char *username){
     int cl_sock;
@@ -159,6 +179,17 @@ void run_client(const char *username){
 
 /********************/
 /* Begin comms_loop()*/
+/* The purpose of the comms_loop is to keep the TCP connection alive in a loop
+    allowing the users to exchange text back and forth. It calls functions from 
+    crypto.c to encrypt and decrypt the messages. It uses the select() function so
+    the app can switch between reading data from the user's cli input and the 
+    contacts incoming network data. Examples from 
+    https://www.geeksforgeeks.org/socket-programming-in-cc-handling-multiple-clients-on-server-without-multi-threading/
+    The encrption methods follow the implementatiopn examples from:
+    https://wiki.openssl.org/index.php/EVP_Symmetric_Encryption_and_Decryption
+
+    Attr: (MDG)
+    */
 /********************/
 void comms_loop(int ne_socket, const char *username, const char *contact_name){
     fd_set readfds; 
@@ -191,12 +222,16 @@ void comms_loop(int ne_socket, const char *username, const char *contact_name){
         //Check for user input
         if(FD_ISSET(STDIN_FILENO, &readfds)){
             memset(buffer, 0, BUFFER_SIZE); // Clears the buffer
+            /* ~~~~~~ Mitigate Buffer overflow */
+            // Using fgets here prevents users from buffer overflow since fgets will only read the 
+            // number of bytes that can fit in the array 'buffer'. Plus the buffer size is set in the 
+            // #define directive in secmsg.h
             if(fgets(buffer, sizeof(buffer), stdin) == NULL){
-                printf("!! Input Stream Closed");
+                printf("!! Input Stream Error");
                 break;
             }
 
-            // strip the '/n' from the end
+            // strip the '\n' from the end, creates a NULL terminated buffer
             buffer[strcspn(buffer, "\n")] = '\0';
 
             // Check for a clear screen cmd
@@ -248,7 +283,8 @@ void comms_loop(int ne_socket, const char *username, const char *contact_name){
 /***************************************************************/
 
 /********************/
-/* Begin perform_dh_exchange_server() */
+/* Begin perform_dh_exchange_server() 
+    Attr: Jay Patel*/
 /********************/
 int perform_dh_exchange_server(int client_socket, unsigned char *session_key) {
     dh_keys_t keys = {0};
@@ -293,7 +329,8 @@ cleanup:
 /***************************************************************/
 
 /********************/
-/* Begin perform_dh_exchange_client() */
+/* Begin perform_dh_exchange_client() 
+    Attr: Jay Patel*/
 /********************/
 int perform_dh_exchange_client(int server_socket, unsigned char *session_key) {
     dh_keys_t keys = {0};
