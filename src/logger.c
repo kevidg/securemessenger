@@ -1,6 +1,6 @@
 /* logger.c is the code for logging the chat text to a local file
     Attr: Alice Deleon*/
-
+#include "secmsg.h"
 #include "logger.h"
 
 /**************** */
@@ -24,18 +24,27 @@ void log_msg(const char *filename, const char *sender, const char *message){
 /*Begin quit_opt()*/
 void quit_opt(const char *filename){
     char buffer[BUFFER_SIZE];
-    int save_opt=0;
-    printf("Would you like to save the chat log? [Y | n] >");
+    
+    printf("Would you like to save the chat log? [Y/n] > ");
     if(fgets(buffer, sizeof(buffer), stdin) == NULL){
-        printf("File saved\n");
         perror("Input Error\n");
+        return;
     }
-        
-    if(strcasecmp(buffer, "y") == 0)
+    buffer[strcspn(buffer, "\n")] = '\0';
+    
+    // Save the log is the default option
+    if(strcasecmp(buffer, "y") == 0 || strlen(buffer) == 0){
         printf("Chat saved as %s\n", filename);
+    }
 
-    if(strcasecmp(buffer, "n") == 0){
-        remove(filename);
+    else if(strcasecmp(buffer, "n") == 0){
+        if (remove(filename) == 0)
         printf("File: %s removed\n", filename);
+        else
+            perror("Error deleting log file");
+    }
+    else{
+        printf("Input unknown. Saving log file.\n");
+    
     }    
 }
