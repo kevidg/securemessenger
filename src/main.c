@@ -27,6 +27,7 @@ int main(int argc, char *argv[]){
                 is_server= true;
                 break;
             case 'n':
+                // !!! Needs Validation
                 username = optarg;
                 break;
             default:

@@ -166,9 +166,10 @@ void run_client(const char *username){
     char contact_name[64]={0};
     recv(cl_sock, contact_name, sizeof(contact_name), 0);
     send(cl_sock, username, sizeof(username), 0);
+    /*~~~~~~~~~*/
     //debug
-    printf("[DEBUG]: CONTACT NAME: %s\n", contact_name);
-    printf("[DEBUG]: USER NAME: %s\n", username);
+    //printf("[DEBUG]: CONTACT NAME: %s\n", contact_name);
+    //printf("[DEBUG]: USER NAME: %s\n", username);
 
     comms_loop(cl_sock, username, contact_name);
     close(cl_sock);
@@ -222,7 +223,8 @@ void comms_loop(int ne_socket, const char *username, const char *contact_name){
         //Check for user input
         if(FD_ISSET(STDIN_FILENO, &readfds)){
             memset(buffer, 0, BUFFER_SIZE); // Clears the buffer
-            /* ~~~~~~ Mitigate Buffer overflow */
+
+            /* ~~~~~~ Mitigate Buffer Overflow */
             // Using fgets here prevents users from buffer overflow since fgets will only read the 
             // number of bytes that can fit in the array 'buffer'. Plus the buffer size is set in the 
             // #define directive in secmsg.h
