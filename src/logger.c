@@ -25,7 +25,7 @@ void log_msg(const char *filename, const char *sender, const char *message){
 void quit_opt(const char *filename){
     char buffer[BUFFER_SIZE];
     int save_opt=0;
-    printf("Would you like to save the chat log? [Y | n]\n");
+    printf("Would you like to save the chat log? [Y | n] >");
     if(fgets(buffer, sizeof(buffer), stdin) == NULL){
         printf("File saved\n");
         perror("Input Error\n");
