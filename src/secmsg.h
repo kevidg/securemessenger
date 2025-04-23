@@ -3,7 +3,7 @@
 #define SECMSG_H
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-#define SERVER_PORT 31337 
+#define SERVER_PORT 31337 // Sets the port used for the app
 #define BUFFER_SIZE 1024
 
 #include "net.h"
