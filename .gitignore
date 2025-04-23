@@ -43,7 +43,6 @@ Thumbs.db
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
-Makefile
 
 # Autotools
 /aclocal.m4
