@@ -1,5 +1,4 @@
-/* logger.c is the code for logging the chat text to a local file
-    Attr: Alice Deleon*/
+
 
 #include "logger.h"
 
@@ -13,8 +12,7 @@ void log_msg(const char *filename, const char *sender, const char *message){
         return;
     }
 
-    //Write to the log
-    /* Using fixed format strings to write to the file prevents format string vulnerabilities*/
+
     fprintf(fp, "%s >> %s\n", sender, message);
     fclose(fp);
 }

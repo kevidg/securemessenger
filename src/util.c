@@ -1,12 +1,9 @@
-/* util.c contains secure messenger app utility functions to retrieve
-    a user name from the system and for input validation functions
-    Attr: Alice Deleon, Michael Guerette (MDG)*/
+
     
 #include "util.h"
 
 /****************** */
 /* Begin get_default_name()*/
-/* Attr: (MDG)*/
 /********************* */
 const char *get_default_name(){
     struct passwd *pw = getpwuid(getuid());

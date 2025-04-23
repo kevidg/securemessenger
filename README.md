@@ -4,31 +4,16 @@
 
 A terminal-based secure messaging application built with C, featuring **AES encryption**, **Diffie-Hellman key exchange**, and optional **file saving** of conversations. Developed as a final project for CS 455 - Spring 2025.
 
-## 📌 Features
+From a terninal run ./secmsg.x with -s to start the server, use -n to set the username. The default username will be the system login name. In a second terminal run ./secmsg.x -c to connect to the server. Use -n to set the client username. 
+Ex:
+Terminal 1:
+   name@linux /home$./secmsg.x -s -n servername
 
-- 🔒 End-to-end encrypted messaging (AES)
-- 🔁 Secure key exchange (Diffie-Hellman)
-- 🖥️ Terminal-based user interface
-- 💾 Optional message saving to a file
-- ⚠️ Robust error handling
-- 🧠 Dynamic memory management for buffers
+Terminal 2:
+   name@linux /home$./secmsg.x -c -n clientname
 
-## 🚀 How It Works
+Type /quit in either terminal to end the session
 
-1. Launch the app with the recipient's IP address as a command line argument.
-2. If the recipient is online and running the app:
-   - A secure key is exchanged using Diffie-Hellman.
-   - Messages are encrypted and transmitted via AES.
-3. On exit, users may choose to save the chat log to a file.
+If using the Makefile check the /build directory for the executable secmsg.x 
 
-## 🛠️ Requirements
-
-- GCC or compatible C compiler
-- POSIX-compliant OS (Linux/macOS)
-- Networking via sockets
-- Standard C libraries
-
-## 🧪 Build Instructions
-
-```bash
-gcc -o secure_messenger secure_messenger.c -lm
+Or from the /src directory use gcc *.c -o secmsg.x -lssl -lcrypto

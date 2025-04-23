@@ -1,10 +1,5 @@
 /*****************/
 /* Start Here */
-
-/* Progam entry, main() parses the cli arguments and uses getopt() to select which 
-   process client or server to start. It aslso calls get_default_user() to retrieve a user name from the 
-   system
-   attr: Michael Guerette (MDG), Alice Deleon, Jay Patel*/
 /*vvvvvvvvvvvvvvvv*/
 
 #include "secmsg.h"
@@ -15,7 +10,7 @@ int main(int argc, char *argv[]){
     int opt, is_client=false, is_server=false;
     char *username = NULL;
 
-    // Adds libraries and functions necessary for OpenSSL encryption
+   
     OpenSSL_add_all_algorithms();
 
     while((opt = getopt(argc, argv, "csn:")) != -1){
@@ -34,9 +29,9 @@ int main(int argc, char *argv[]){
                fprintf(stderr, "Usage: %s -c | -s [-n username]\n", argv[0]);
                return -1;
         }
-    } // End Arg Parser While loop
+    } 
     if(!username){
-        //Get's the users logon id from system if a username isn't supplied
+        
         username = (char *)get_default_name();
     }
 
