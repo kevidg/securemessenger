@@ -72,6 +72,6 @@ int validate_ip(const char *in_addr){
     free(cp_in_addr);
 
     return (segments == 4);
-} 
-/* End validate_ip() ***/
+} */
+/* End validate_ip() ****/
 /***************************************************************/

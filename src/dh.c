@@ -97,7 +97,7 @@ int generate_dh_keys(dh_keys_t *keys) {
            priv_len, pub_len, sizeof(keys->private_key), sizeof(keys->public_key));
     
     // Check buffer sizes
-    if (priv_len > sizeof(keys->private_key) || pub_len > sizeof(keys->public_key)) {
+    if ((size_t)priv_len > sizeof(keys->private_key) || (size_t)pub_len > sizeof(keys->public_key)) {
         printf("Key too large: priv_len=%d, pub_len=%d, priv_buffer=%zu, pub_buffer=%zu\n", 
                priv_len, pub_len, sizeof(keys->private_key), sizeof(keys->public_key));
         goto cleanup;
@@ -156,7 +156,7 @@ int compute_shared_secret(dh_keys_t *keys, const unsigned char *other_public, si
     printf("Debug: Shared secret length: %d, buffer size: %zu\n", 
            shared_len, sizeof(keys->shared_secret));
     
-    if (shared_len > sizeof(keys->shared_secret)) {
+    if ((size_t)shared_len > sizeof(keys->shared_secret)) {
         printf("Shared secret too large: %d > %zu\n", 
                shared_len, sizeof(keys->shared_secret));
         goto cleanup;
