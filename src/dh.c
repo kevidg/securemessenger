@@ -97,6 +97,8 @@ int generate_dh_keys(dh_keys_t *keys) {
            priv_len, pub_len, sizeof(keys->private_key), sizeof(keys->public_key));
     
     // Check buffer sizes
+    // Cast priv_len and pub_len to (size_t) which is the same type as returned by sizeof()
+    // This keeps the signedness the same
     if ((size_t)priv_len > sizeof(keys->private_key) || (size_t)pub_len > sizeof(keys->public_key)) {
         printf("Key too large: priv_len=%d, pub_len=%d, priv_buffer=%zu, pub_buffer=%zu\n", 
                priv_len, pub_len, sizeof(keys->private_key), sizeof(keys->public_key));
