@@ -251,6 +251,7 @@ void comms_loop(int ne_socket, const char *username, const char *contact_name){
 
             if(strcasecmp(buffer, "/quit") == 0){
                 shutdown(ne_socket, SHUT_RDWR);
+                quit_opt(msgLog);
                 break;
             }
         }
@@ -274,6 +275,7 @@ void comms_loop(int ne_socket, const char *username, const char *contact_name){
             // Check if the quit() cmd was sent
             if(strcasecmp((char*)plaintext, "/quit") == 0){
                     printf(":: Chat ended by [%s].\n", contact_name);
+                    quit_opt(msgLog);
                     break;
             }
             printf("[%s] >> %s\n", contact_name, plaintext);

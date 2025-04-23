@@ -20,3 +20,22 @@ void log_msg(const char *filename, const char *sender, const char *message){
 }
 /* End log_msg()*/
 /***********************************************************************************/
+
+/*Begin quit_opt()*/
+void quit_opt(const char *filename){
+    char buffer[BUFFER_SIZE];
+    int save_opt=0;
+    printf("Would you like to save the chat log? [Y | n]\n");
+    if(fgets(buffer, sizeof(buffer), stdin) == NULL){
+        printf("File saved\n");
+        perror("Input Error\n");
+    }
+        
+    if(strcasecmp(buffer, "y") == 0)
+        printf("Chat saved as %s\n", filename);
+
+    if(strcasecmp(buffer, "n") == 0){
+        remove(filename);
+        printf("File: %s removed\n", filename);
+    }    
+}
