@@ -1,5 +1,5 @@
 /* logger.c is the code for logging the chat text to a local file
-    Attr: Alice Deleon*/
+    Attr: Alice DeLeon*/
 #include "secmsg.h"
 #include "logger.h"
 

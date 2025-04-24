@@ -4,7 +4,7 @@
 /* Progam entry, main() parses the cli arguments and uses getopt() to select which 
    process client or server to start. It aslso calls get_default_user() to retrieve a user name from the 
    system
-   attr: Michael Guerette (MDG), Alice Deleon, Jay Patel*/
+   attr: Michael Guerette (MDG), Alice DeLeon, Jay Patel*/
 /*vvvvvvvvvvvvvvvv*/
 
 #include "secmsg.h"
