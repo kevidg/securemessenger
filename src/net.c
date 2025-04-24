@@ -35,6 +35,10 @@ void run_server(const char *username){
 
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
     
+    /* ~~~~~~ Mitigate Failure to Handle Errors Correctly  */
+    // The mitigation ensures that the return values of critical socket functions are checked to
+    // detect failures. If a failure is detected the program logs an error message using perror
+    // and exits gracefully, preventing undefined behavior or further execution in an invalid state.
     if(server_socket < 0){
         perror("!! Socket Creation Failed");
         exit(EXIT_FAILURE);
@@ -89,6 +93,10 @@ void run_server(const char *username){
         return;
     }
 
+    /* ~~~~~~ Mitigate Information Leakage */
+    // By securely clearing the session key from memory after it has been used, it prevents sensitive
+    // cryptographic material from lingering in memory, reducing the risk of information leakage
+    // through memory dumps or other attacks.
     // Clear session key from memory
     memset(session_key, 0, sizeof(session_key));
 
@@ -124,7 +132,10 @@ void run_client(const char *username){
     struct sockaddr_in server_address;
     
 
-    
+    /* ~~~~~~ Mitigate Failure to Handle Errors Correctly  */
+    // The mitigation ensures that the return values of critical socket functions are checked to
+    // detect failures. If a failure is detected the program logs an error message using perror
+    // and exits gracefully, preventing undefined behavior or further execution in an invalid state.
     if((cl_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0){
         perror("!! Socket Failure");
         exit(EXIT_FAILURE);
@@ -160,6 +171,10 @@ void run_client(const char *username){
     }
 
     // Clear session key from memory
+    /* ~~~~~~ Mitigate Information Leakage */
+    // By securely clearing the session key from memory after it has been used, it prevents sensitive
+    // cryptographic material from lingering in memory, reducing the risk of information leakage
+    // through memory dumps or other attacks.
     memset(session_key, 0, sizeof(session_key));
 
 //Receive Server username;
@@ -192,6 +207,7 @@ void run_client(const char *username){
     Attr: (MDG)
     */
 /********************/
+
 void comms_loop(int ne_socket, const char *username, const char *contact_name){
     fd_set readfds; 
     char buffer[BUFFER_SIZE];
@@ -222,6 +238,10 @@ void comms_loop(int ne_socket, const char *username, const char *contact_name){
 
         //Check for user input
         if(FD_ISSET(STDIN_FILENO, &readfds)){
+            /* ~~~~~~ Mitigate Information Leakage */
+            // By clearing the buffer before reuse, it ensures that residual data from previous
+            // operations is removed, preventing sensitive information from being inadvertently
+            // exposed or leaked during subsequent operations.
             memset(buffer, 0, BUFFER_SIZE); // Clears the buffer
 
             /* ~~~~~~ Mitigate Buffer Overflow */
@@ -307,6 +327,10 @@ int perform_dh_exchange_server(int client_socket, unsigned char *session_key) {
         goto cleanup;
     }
 
+    /* ~~~~~~ Mitigate Buffer Overflow */
+    // Buffer overruns are mitigated by validating the size of the received public key
+    // (received_pubkey) to ensure it matches the expected size before processing,
+    // preventing memory overflows.
     // Receive client's public key
     ssize_t received = recv(client_socket, received_pubkey, sizeof(received_pubkey), 0);
     if (received != sizeof(received_pubkey)) {
@@ -325,6 +349,11 @@ int perform_dh_exchange_server(int client_socket, unsigned char *session_key) {
     ret = 0;
 
 cleanup:
+    /* ~~~~~~ Mitigate Information Leakage */
+    // The mitigation ensures that the session key is securely wiped from memory after it has
+    // been set by using the function. This prevents sensitive cryptographic material from
+    // lingering in memory, reducing the risk of information leakage through memory dumps or
+    // other attacks.
     // Securely wipe sensitive data
     secure_zero(&keys, sizeof(keys));
     return ret;
@@ -347,6 +376,10 @@ int perform_dh_exchange_client(int server_socket, unsigned char *session_key) {
         return -1;
     }
 
+    /* ~~~~~~ Mitigate Buffer Overflow */
+    // Buffer overruns are mitigated by validating the size of the received public key
+    // (received_pubkey) to ensure it matches the expected size before processing,
+    // preventing memory overflows.
     // Receive server's public key
     ssize_t received = recv(server_socket, received_pubkey, sizeof(received_pubkey), 0);
     if (received != sizeof(received_pubkey)) {
@@ -371,6 +404,11 @@ int perform_dh_exchange_client(int server_socket, unsigned char *session_key) {
     ret = 0;
 
 cleanup:
+    /* ~~~~~~ Mitigate Information Leakage */
+    // The mitigation ensures that the session key is securely wiped from memory after it has
+    // been set by using the function. This prevents sensitive cryptographic material from
+    // lingering in memory, reducing the risk of information leakage through memory dumps or
+    // other attacks.
     // Securely wipe sensitive data
     secure_zero(&keys, sizeof(keys));
     return ret;

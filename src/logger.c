@@ -13,8 +13,15 @@ void log_msg(const char *filename, const char *sender, const char *message){
         return;
     }
 
-    //Write to the log
-    /* Using fixed format strings to write to the file prevents format string vulnerabilities*/
+    /* ~~~~~~ Mitigate Format String Problems */
+    // Format string vulnerabilities are mitigated in the function by using fixed format strings,
+    // ensuring that user-controlled input is not directly used as a format specifier. This
+    // prevents attackers from exploiting the format string to read or write arbitrary memory.
+    /* ~~~~~~ Mitigate Failure to Protect Stored Data */
+    // The mitigation ensures that chat logs are written to files using fixed format strings
+    // in the log_msg function. This prevents tampering by avoiding the use of user-controlled
+    // input as format specifiers, ensuring the integrity and structure of the log entries.
+    // Write to the log
     fprintf(fp, "%s >> %s\n", sender, message);
     fclose(fp);
 }

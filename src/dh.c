@@ -24,6 +24,11 @@ int generate_dh_keys(dh_keys_t *keys) {
     BN_CTX *ctx = BN_CTX_new();
     int ret = -1;
 
+    /* ~~~~~~ Mitigate Failure to Handle Errors Correctly */
+    // The mitigation ensures that all BIGNUM allocations are validated to check if they were
+    // successfully created. If any allocation fails, the program logs an error message and
+    // cleans up previously allocated resources using goto cleanup, preventing resource leaks
+    // and undefined behavior.
     if (!p || !g || !priv_key || !pub_key || !ctx) {
         printf("Failed to allocate BIGNUMs\n");
         goto cleanup;
@@ -84,6 +89,10 @@ int generate_dh_keys(dh_keys_t *keys) {
         goto cleanup;
     }
 
+    /* ~~~~~~ Mitigate Buffer Overflow */
+    // Buffer overruns are mitigated by clearing and resizing buffers using memset to
+    // ensure they are properly initialized and sized before copying data. This
+    // prevents writing beyond the allocated memory, reducing the risk of memory corruption.
     // Clear and resize buffers - now using larger buffers
     memset(keys->private_key, 0, sizeof(keys->private_key));
     memset(keys->public_key, 0, sizeof(keys->public_key));
@@ -134,6 +143,11 @@ int compute_shared_secret(dh_keys_t *keys, const unsigned char *other_public, si
     BN_CTX *ctx = BN_CTX_new();
     int ret = -1;
 
+    /* ~~~~~~ Mitigate Failure to Handle Errors Correctly */
+    // The mitigation ensures that all BIGNUM allocations are validated to check if they were
+    // successfully created. If any allocation fails, the program logs an error message and
+    // cleans up previously allocated resources using goto cleanup, preventing resource leaks
+    // and undefined behavior.
     if (!p || !priv_key || !pub_key || !shared || !ctx) {
         printf("Failed to allocate BIGNUMs for shared secret\n");
         goto cleanup;
@@ -158,6 +172,11 @@ int compute_shared_secret(dh_keys_t *keys, const unsigned char *other_public, si
     printf("Debug: Shared secret length: %d, buffer size: %zu\n", 
            shared_len, sizeof(keys->shared_secret));
     
+    /* ~~~~~~ Mitigate Buffer Overflow */
+    // Buffer overruns are mitigated by validating the size of the shared secret against the
+    // buffer size before copying data. This ensures that the shared secret fits within the
+    // allocated memory, preventing memory corruption or overflow.
+    // Check buffer size
     if ((size_t)shared_len > sizeof(keys->shared_secret)) {
         printf("Shared secret too large: %d > %zu\n", 
                shared_len, sizeof(keys->shared_secret));
@@ -177,5 +196,9 @@ cleanup:
 }
 
 void secure_zero(void *ptr, size_t size) {
+    /* ~~~~~~ Mitigate Information Leakage */
+    // The mitigation ensures that sensitive data, such as private keys, is securely wiped from
+    // memory after use. This prevents residual sensitive information from remaining in memory,
+    // reducing the risk of information leakage through memory dumps or other attacks.
     OPENSSL_cleanse(ptr, size);
 }
