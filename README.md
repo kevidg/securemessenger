@@ -13,7 +13,7 @@ A terminal-based secure messaging application built with C, featuring **AES encr
 - ⚠️ Robust error handling
 
 ## 🚀 How It Works
-
+Note: The application is hard coded to use the loopback (127.0.0.1). The IPv4 address can be changed in the net.c file.
 1. Launch one terminal as server <-s> use <-n> to set the user name
 2. Launch another terminal as client <-c> use <-n> to set the user name 
    - A secure key is exchanged using Diffie-Hellman.
