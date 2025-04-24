@@ -31,5 +31,5 @@ A terminal-based secure messaging application built with C, featuring **AES encr
 ## 🧪 Build Instructions
 
 ```bash
-<securemessenger>\$make
+/<securemessenger>$make
 Or from the /src directory use gcc *.c -o secmsg.x -lssl -lcrypto
