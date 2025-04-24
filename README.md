@@ -11,15 +11,14 @@ A terminal-based secure messaging application built with C, featuring **AES encr
 - 🖥️ Terminal-based user interface
 - 💾 Optional message saving to a file
 - ⚠️ Robust error handling
-- 🧠 Dynamic memory management for buffers
 
 ## 🚀 How It Works
 
-1. Launch the app with the recipient's IP address as a command line argument.
-2. If the recipient is online and running the app:
+1. Launch one terminal as server <-s> use -n to set the user name
+2. Launch another terminal as client <-c> use -n to set the user name 
    - A secure key is exchanged using Diffie-Hellman.
    - Messages are encrypted and transmitted via AES.
-3. On exit, users may choose to save the chat log to a file.
+3. On exit, </quit> users may choose to save the chat log to a file.
 
 ## 🛠️ Requirements
 
@@ -27,8 +26,10 @@ A terminal-based secure messaging application built with C, featuring **AES encr
 - POSIX-compliant OS (Linux/macOS)
 - Networking via sockets
 - Standard C libraries
+- OpenSSL <libssl-dev>
 
 ## 🧪 Build Instructions
 
 ```bash
 <securemessenger>\$make
+Or from the /src directory use gcc *.c -o secmsg.x -lssl -lcrypto
