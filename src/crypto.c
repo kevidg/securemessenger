@@ -17,6 +17,7 @@ unsigned char aes_iv[16]= "iforgotwhatisaid"; // AES IV
 
 /********************/
 /* Begin generate_aes_key_iv() */
+/* Attr: MDG*/
 /*********************/
 void generate_aes_key_iv(){
     /* ~~~~~~ Mitigate Failure to Protect Stored Data */
@@ -30,7 +31,8 @@ void generate_aes_key_iv(){
 /*****************************************************************/
 
 /**********************/
-/* Begin aes_encrypt()*/
+/* Begin aes_encrypt()
+   Attr: MDG          */
 /**********************/
 int aes_encrypt(const unsigned char *plaintxt, int plaintxt_len, unsigned char *ciphertxt){
     EVP_CIPHER_CTX *ctx;
@@ -69,7 +71,8 @@ int aes_encrypt(const unsigned char *plaintxt, int plaintxt_len, unsigned char *
 /*****************************************************************************/
 
 /**********************/
-/* Begin aes_decrypt()*/
+/* Begin aes_decrypt()
+    Attr MDG          */
 /**********************/
 int aes_decrypt(const unsigned char *ciphertxt, int ciphertxt_len, unsigned char *plaintxt){
     EVP_CIPHER_CTX *ctx;
@@ -109,7 +112,8 @@ int aes_decrypt(const unsigned char *ciphertxt, int ciphertxt_len, unsigned char
 /*****************************************************************************/
 
 /**********************/
-/* Begin set_crypto_key() */
+/* Begin set_crypto_key() 
+    Attr Jay Patel    */
 /**********************/
 int set_crypto_key(const unsigned char *key, size_t keylen) {
     /* ~~~~~~ Mitigate Failure to Protect Stored Data */

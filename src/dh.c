@@ -13,7 +13,7 @@ static BIGNUM *hex2bn(const char *hex) {
     BN_hex2bn(&bn, hex);
     return bn;
 }
-
+// Jay Patel
 int generate_dh_keys(dh_keys_t *keys) {
     if (!keys) return -1;
     
@@ -128,7 +128,7 @@ cleanup:
     BN_CTX_free(ctx);
     return ret;
 }
-
+// Jay Patel
 int compute_shared_secret(dh_keys_t *keys, const unsigned char *other_public, size_t pubkey_len) {
     if (!keys || !other_public || pubkey_len != sizeof(keys->public_key)) {
         printf("Invalid parameters: pubkey_len=%zu, expected=%zu\n", 
@@ -154,9 +154,9 @@ int compute_shared_secret(dh_keys_t *keys, const unsigned char *other_public, si
     }
 
     // Add debug output
-    printf("Debug: Computing shared secret...\n");
-    printf("Debug: Private key length: %d\n", BN_num_bytes(priv_key));
-    printf("Debug: Public key length: %d\n", BN_num_bytes(pub_key));
+    //printf("Debug: Computing shared secret...\n");
+    //printf("Debug: Private key length: %d\n", BN_num_bytes(priv_key));
+    //printf("Debug: Public key length: %d\n", BN_num_bytes(pub_key));
 
     // Compute shared secret
     if (!BN_mod_exp(shared, pub_key, priv_key, p, ctx)) {
@@ -194,7 +194,7 @@ cleanup:
     BN_CTX_free(ctx);
     return ret;
 }
-
+// Jay Patel
 void secure_zero(void *ptr, size_t size) {
     /* ~~~~~~ Mitigate Information Leakage */
     // The mitigation ensures that sensitive data, such as private keys, is securely wiped from

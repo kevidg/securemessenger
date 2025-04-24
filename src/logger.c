@@ -4,7 +4,8 @@
 #include "logger.h"
 
 /**************** */
-/*Begin log_msg() */
+/*Begin log_msg() 
+  Alice DeLeon */
 /**************** */
 void log_msg(const char *filename, const char *sender, const char *message){
     FILE *fp = fopen(filename, "a");
@@ -29,6 +30,7 @@ void log_msg(const char *filename, const char *sender, const char *message){
 /***********************************************************************************/
 
 /*Begin quit_opt()*/
+/* Alice DeLeon */
 void quit_opt(const char *filename){
     char buffer[BUFFER_SIZE];
     

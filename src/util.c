@@ -22,7 +22,8 @@ const char *get_default_name(){
 
 // Commented out since the app does not need a user entered IP Address
 /***************** */
-/*Input Validation*/
+/*Input Validation
+  Alice DeLeon    */
 /**************** */
 //IP check
     /*
