@@ -14,8 +14,8 @@ A terminal-based secure messaging application built with C, featuring **AES encr
 
 ## 🚀 How It Works
 
-1. Launch one terminal as server <-s> use -n to set the user name
-2. Launch another terminal as client <-c> use -n to set the user name 
+1. Launch one terminal as server <-s> use <-n> to set the user name
+2. Launch another terminal as client <-c> use <-n> to set the user name 
    - A secure key is exchanged using Diffie-Hellman.
    - Messages are encrypted and transmitted via AES.
 3. On exit, </quit> users may choose to save the chat log to a file.
