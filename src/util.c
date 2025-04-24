@@ -1,6 +1,6 @@
 /* util.c contains secure messenger app utility functions to retrieve
     a user name from the system and for input validation functions
-    Attr: Alice Deleon, Michael Guerette (MDG)*/
+    Attr: Alice DeLeon, Michael Guerette (MDG)*/
     
 #include "util.h"
 
